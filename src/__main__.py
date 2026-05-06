@@ -76,7 +76,7 @@ def analyze_command(audio_path: str) -> None:
     analyzer = StyleAnalyzer()
     features = analyzer.analyze(audio_path)
 
-    print("\n📊 Musical Style Analysis")
+    print("\n[ANALYSIS] Musical Style Analysis")
     print("=" * 50)
     print(f"Tempo: {features['tempo']:.1f} BPM")
     print(f"Loudness: {features['loudness']:.3f}")
@@ -86,7 +86,7 @@ def analyze_command(audio_path: str) -> None:
     print("=" * 50)
 
   except Exception as error:
-    print(f"❌ Error: {str(error)}", file=sys.stderr)
+    print(f"[ERROR] {str(error)}", file=sys.stderr)
     sys.exit(1)
 
 
@@ -105,7 +105,7 @@ def generate_command(
   @param {string} provider - API provider name
   """
   try:
-    print(f"\n🎵 Generating music based on: {reference}")
+    print(f"\n[GENERATING] Music based on: {reference}")
     print(f"   Duration: {duration}s, Provider: {provider}")
 
     generator = MusicGenerator()
@@ -116,10 +116,10 @@ def generate_command(
       provider=provider
     )
 
-    print(f"✓ Generated music saved to: {result_path}")
+    print(f"[OK] Generated music saved to: {result_path}")
 
   except Exception as error:
-    print(f"❌ Error: {str(error)}", file=sys.stderr)
+    print(f"[ERROR] {str(error)}", file=sys.stderr)
     sys.exit(1)
 
 
