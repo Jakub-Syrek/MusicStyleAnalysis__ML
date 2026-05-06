@@ -54,7 +54,8 @@ class StyleAnalyzer:
         @returns {number} Estimated tempo in BPM
         """
         onset_env = librosa.onset.onset_strength(y=y, sr=sr)
-        tempo, _ = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
+        result = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
+        tempo = result[0] if isinstance(result, tuple) else result
         return float(tempo)
 
     def _extract_loudness(self, y: np.ndarray) -> float:

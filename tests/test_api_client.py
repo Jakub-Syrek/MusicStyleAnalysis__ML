@@ -62,7 +62,8 @@ class TestMusicGenerationClient(unittest.TestCase):
 
     @param {MagicMock} mock_post - Mocked requests.post
     """
-    mock_post.side_effect = Exception("API Error")
+    import requests
+    mock_post.side_effect = requests.exceptions.RequestException("API Error")
 
     client = MusicGenerationClient(provider="huggingface")
 
