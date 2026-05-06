@@ -1,6 +1,5 @@
 librosa==0.10.0
 music21==9.1.0
-essentia-essentia-x86_64==2.1.0
 requests==2.31.0
 python-dotenv==1.0.0
 numpy==1.24.3
