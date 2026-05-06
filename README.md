@@ -32,24 +32,57 @@ cp .env.example .env
 
 ### Usage
 
+#### Analyze Musical Style
+Extract features from a reference audio file:
+
 ```bash
-# Analyze a reference audio file
-python -m src.style_analyzer --input reference_track.mp3
+python -m src analyze reference_track.mp3
+```
 
-# Generate music based on reference style
-python -m src.music_generator --reference reference_track.mp3 --duration 30
+Output:
+```
+📊 Musical Style Analysis
+==================================================
+Tempo: 128.5 BPM
+Loudness: 0.456
+Spectral Centroid: 2048.3 Hz
+Zero Crossing Rate: 0.0145
+MFCC (13 coefficients): [12.34, 5.67, ...]
+==================================================
+```
 
-# Full pipeline
-python -m src.main --reference reference_track.mp3 --output generated_music.wav
+#### Generate Music
+Create new music based on a reference style:
+
+```bash
+# Basic usage
+python -m src generate reference_track.mp3
+
+# Custom duration and output
+python -m src generate reference_track.mp3 --duration 60 --output my_music.wav
+
+# Specify API provider
+python -m src generate reference_track.mp3 --provider huggingface
+```
+
+#### Run Tests
+```bash
+pytest tests/
+pytest tests/test_style_analyzer.py -v
+pytest tests/test_api_client.py -v
 ```
 
 ## Project Status
 
-- [x] Project scaffold
-- [ ] Style analyzer implementation
-- [ ] Music generator integration
-- [ ] CLI interface
-- [ ] Testing suite
+- [x] Project scaffold with CLAUDE.md directives
+- [x] Style analyzer implementation (tempo, loudness, spectral features, MFCC)
+- [x] Music generator orchestrator
+- [x] API client for Hugging Face integration
+- [x] CLI interface (analyze, generate commands)
+- [x] Unit tests with mocked dependencies
+- [ ] Real audio file testing
+- [ ] Web UI/API wrapper
+- [ ] Documentation and examples
 
 ## Architecture
 
