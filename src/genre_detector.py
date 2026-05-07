@@ -61,16 +61,22 @@ class GenreDetector:
         "zcr_range": (0.04, 0.1),
       },
       "electronic": {
-        "tempo_range": (100, 150),
-        "loudness_range": (0.3, 0.6),
+        "tempo_range": (100, 160),
+        "loudness_range": (0.3, 0.65),
         "spectral_centroid_range": (2000, 5000),
-        "zcr_range": (0.05, 0.15),
+        "zcr_range": (0.05, 0.16),
       },
       "dance": {
-        "tempo_range": (115, 145),
-        "loudness_range": (0.35, 0.65),
-        "spectral_centroid_range": (2500, 4500),
-        "zcr_range": (0.05, 0.14),
+        "tempo_range": (115, 150),
+        "loudness_range": (0.35, 0.7),
+        "spectral_centroid_range": (2500, 5000),
+        "zcr_range": (0.05, 0.15),
+      },
+      "breakcore": {
+        "tempo_range": (160, 200),
+        "loudness_range": (0.2, 0.7),
+        "spectral_centroid_range": (1500, 4000),
+        "zcr_range": (0.08, 0.18),
       },
     }
 
@@ -162,6 +168,7 @@ class GenreDetector:
       "hip_hop": "Hip-Hop/Rap",
       "electronic": "Electronic/Synth",
       "dance": "Dance/EDM",
+      "breakcore": "Breakcore/Jungle",
       "unknown": "Unknown genre",
     }
     return descriptions.get(genre, genre)

@@ -5,7 +5,7 @@ Analyze musical style from audio files and classify music genre based on compreh
 ## Features
 
 - Extract musical features (tempo, loudness, spectral centroid, zero crossing rate, MFCC)
-- Classify music into 9 genres: Classical, Ambient, Jazz, Blues, Rock, Pop, Hip-Hop, Electronic, Dance
+- Classify music into 10 genres: Classical, Ambient, Jazz, Blues, Rock, Pop, Hip-Hop, Electronic, Dance, Breakcore
 - Analyze rhythm and beat patterns (beat regularity, syncopation, structural breaks)
 - Support for multiple audio formats (WAV, MP3, FLAC)
 
@@ -73,10 +73,11 @@ pytest tests/test_genre_detector.py -v
 
 - [x] Audio feature extraction (tempo, loudness, spectral features, MFCC)
 - [x] Basic rhythm analysis (beat tracking, break detection)
-- [x] Improved genre classification (9 genres with multi-feature matching)
+- [x] Improved genre classification (10 genres with multi-feature matching)
 - [x] CLI interface (analyze command)
 - [x] Comprehensive test coverage
 - [ ] Spectral features (chroma, rolloff, flatness)
+- [ ] Support for more genres (Techno, House, Drum & Bass, etc.)
 - [ ] Machine learning genre classifier (optional future enhancement)
 
 ## Architecture
@@ -106,15 +107,16 @@ Analyzes beat and rhythm characteristics:
 
 ## Supported Genres
 
-1. **Classical/Orchestral** - Slower, orchestral textures
-2. **Ambient/Atmospheric** - Low tempo, subtle, peaceful
-3. **Jazz** - Variable tempo, syncopated rhythms
-4. **Blues** - Mid-range tempo, soulful character
-5. **Rock** - Fast to moderate, high energy
-6. **Pop** - Balanced, radio-friendly characteristics
-7. **Hip-Hop/Rap** - Medium tempo, rhythmic focus
-8. **Electronic/Synth** - Synthetic sounds, diverse tempos
-9. **Dance/EDM** - High tempo, energetic, regular beats
+1. **Classical/Orchestral** - Tempo: 60-120 BPM, orchestral textures
+2. **Ambient/Atmospheric** - Tempo: 40-90 BPM, subtle, peaceful
+3. **Jazz** - Tempo: 70-130 BPM, syncopated rhythms
+4. **Blues** - Tempo: 60-110 BPM, soulful character
+5. **Rock** - Tempo: 90-150 BPM, high energy
+6. **Pop** - Tempo: 85-135 BPM, radio-friendly
+7. **Hip-Hop/Rap** - Tempo: 80-120 BPM, rhythmic focus
+8. **Electronic/Synth** - Tempo: 100-160 BPM, synthetic sounds
+9. **Dance/EDM** - Tempo: 115-150 BPM, energetic, regular beats
+10. **Breakcore/Jungle** - Tempo: 160-200+ BPM, chaotic syncopation, fast breaks
 
 ## Development
 
