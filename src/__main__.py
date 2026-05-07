@@ -37,6 +37,11 @@ def create_parser() -> argparse.ArgumentParser:
     "audio",
     help="Path to audio file"
   )
+  analyze_parser.add_argument(
+    "--verbose",
+    action="store_true",
+    help="Show detailed genre matching scores for all genres"
+  )
 
   # Generate command
   generate_parser = subparsers.add_parser(
@@ -67,11 +72,12 @@ def create_parser() -> argparse.ArgumentParser:
   return parser
 
 
-def analyze_command(audio_path: str) -> None:
-  """
-  Execute analyze command.
+def analyze_command(audio_path: str, verbose: bool = False) -> None:
+  """Execute analyze command.
 
-  @param {string} audio_path - Path to audio file
+  Args:
+    audio_path: Path to audio file
+    verbose: Show detailed genre scores
   """
   try:
     import librosa as lr
@@ -108,6 +114,19 @@ def analyze_command(audio_path: str) -> None:
       family_display = f"({family.title()})"
       print(f"{idx}. {desc:28s} {confidence:6.1%}  {family_display}")
     print("=" * 50)
+
+    if verbose:
+      print("\n[DETAILED] All Genres with Confidence Scores")
+      print("=" * 60)
+      all_genres = genre_detector.classify_all(features)
+      for idx, (genre, confidence) in enumerate(all_genres, 1):
+        desc = genre_detector.get_genre_description(genre)
+        family = GENRE_DATABASE.get(genre, {}).get("family", "unknown")
+        family_display = f"({family.title()})"
+        strength_blocks = int(confidence * 10)
+        strength = "[" + "=" * strength_blocks + "-" * (10 - strength_blocks) + "]"
+        print(f"{idx:2d}. {desc:28s} {confidence:6.1%} {strength} {family_display}")
+      print("=" * 60)
 
     print("\n[RHYTHM] Beat & Rhythm Analysis")
     print("=" * 50)
@@ -167,7 +186,7 @@ def main() -> None:
     sys.exit(0)
 
   if args.command == "analyze":
-    analyze_command(args.audio)
+    analyze_command(args.audio, verbose=args.verbose)
   elif args.command == "generate":
     generate_command(
       args.reference,

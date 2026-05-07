@@ -136,6 +136,36 @@ class GenreDetector:
       for name, score in top5
     ]
 
+  def classify_all(self, features: Dict[str, Any]) -> List[Tuple[str, float]]:
+    """Classify all genres with scores.
+
+    Args:
+      features: Audio features from StyleAnalyzer
+
+    Returns:
+      List of all (genre_name, confidence_score) sorted by confidence
+    """
+    tempo = features.get("tempo", 100)
+    loudness = features.get("loudness", 0.3)
+    spectral = features.get("spectral_centroid", 2000)
+    zcr = features.get("zero_crossing_rate", 0.05)
+
+    all_scores = {}
+    for family in self.families.values():
+      scores = family.match_score(tempo, loudness, spectral, zcr)
+      all_scores.update(scores)
+
+    sorted_genres = sorted(
+      all_scores.items(),
+      key=lambda x: x[1],
+      reverse=True
+    )
+
+    return [
+      (name, min(score / 1.0, 1.0))
+      for name, score in sorted_genres
+    ]
+
   def get_genre_description(self, genre: str) -> str:
     """Get human-readable genre description."""
     if genre in GENRE_DATABASE:
