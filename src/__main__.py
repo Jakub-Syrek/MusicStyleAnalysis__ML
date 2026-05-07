@@ -12,6 +12,7 @@ from pathlib import Path
 
 from src.style_analyzer import StyleAnalyzer
 from src.music_generator import MusicGenerator
+from src.genre_detector import GenreDetector, RhythmAnalyzer
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -73,8 +74,22 @@ def analyze_command(audio_path: str) -> None:
   @param {string} audio_path - Path to audio file
   """
   try:
+    import librosa as lr
+
     analyzer = StyleAnalyzer()
     features = analyzer.analyze(audio_path)
+
+    # Load audio for rhythm analysis
+    y, sr = lr.load(audio_path, sr=16000)
+
+    # Genre detection
+    genre_detector = GenreDetector()
+    genre, confidence = genre_detector.classify(features)
+    genre_desc = genre_detector.get_genre_description(genre)
+
+    # Rhythm analysis
+    rhythm_analyzer = RhythmAnalyzer(sr)
+    rhythm = rhythm_analyzer.analyze_rhythm(y, sr)
 
     print("\n[ANALYSIS] Musical Style Analysis")
     print("=" * 50)
@@ -83,6 +98,20 @@ def analyze_command(audio_path: str) -> None:
     print(f"Spectral Centroid: {features['spectral_centroid']:.1f} Hz")
     print(f"Zero Crossing Rate: {features['zero_crossing_rate']:.4f}")
     print(f"MFCC (13 coefficients): {[f'{m:.2f}' for m in features['mfcc']]}")
+    print("=" * 50)
+
+    print("\n[GENRE] Classification")
+    print("=" * 50)
+    print(f"Genre: {genre_desc}")
+    print(f"Confidence: {confidence:.1%}")
+    print("=" * 50)
+
+    print("\n[RHYTHM] Beat & Rhythm Analysis")
+    print("=" * 50)
+    print(f"Beat Regularity: {rhythm['beat_regularity']:.1%} (how steady)")
+    print(f"Onset Density: {rhythm['onset_density']:.3f} (syncopation)")
+    print(f"Strong Rhythm: {'Yes' if rhythm['has_strong_rhythm'] else 'No'}")
+    print(f"Detected Breaks: {rhythm['num_breaks']} (silent sections)")
     print("=" * 50)
 
   except Exception as error:
