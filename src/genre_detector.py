@@ -9,127 +9,199 @@ import librosa
 
 class GenreDetector:
   """
-  Classify music genre based on audio features.
+  Classify music genre based on comprehensive audio features.
 
-  Uses tempo, loudness, spectral characteristics, and rhythm patterns
-  to classify into basic genres.
+  Uses tempo, loudness, spectral characteristics, harmonic content,
+  and rhythm patterns to classify into genres.
   """
 
   def __init__(self):
-    """Initialize genre detector."""
+    """Initialize genre detector with feature thresholds."""
     self.genres = {
-      "electronic": {"tempo_range": (110, 140), "loudness_min": 0.4},
-      "dance": {"tempo_range": (120, 135), "loudness_min": 0.5},
-      "pop": {"tempo_range": (90, 130), "loudness_min": 0.3},
-      "rock": {"tempo_range": (95, 140), "loudness_min": 0.4},
-      "jazz": {"tempo_range": (70, 110), "loudness_min": 0.2},
-      "blues": {"tempo_range": (60, 100), "loudness_min": 0.25},
-      "hip_hop": {"tempo_range": (85, 115), "loudness_min": 0.3},
-      "classical": {"tempo_range": (60, 120), "loudness_min": 0.15},
-      "ambient": {"tempo_range": (40, 80), "loudness_min": 0.1},
+      "classical": {
+        "tempo_range": (60, 120),
+        "loudness_range": (0.1, 0.5),
+        "spectral_centroid_range": (1500, 3500),
+        "zcr_range": (0.01, 0.08),
+      },
+      "ambient": {
+        "tempo_range": (40, 90),
+        "loudness_range": (0.05, 0.3),
+        "spectral_centroid_range": (1000, 2500),
+        "zcr_range": (0.01, 0.05),
+      },
+      "jazz": {
+        "tempo_range": (70, 130),
+        "loudness_range": (0.15, 0.4),
+        "spectral_centroid_range": (2000, 3500),
+        "zcr_range": (0.03, 0.1),
+      },
+      "blues": {
+        "tempo_range": (60, 110),
+        "loudness_range": (0.2, 0.45),
+        "spectral_centroid_range": (1800, 3200),
+        "zcr_range": (0.04, 0.12),
+      },
+      "rock": {
+        "tempo_range": (90, 150),
+        "loudness_range": (0.3, 0.6),
+        "spectral_centroid_range": (2500, 4500),
+        "zcr_range": (0.05, 0.15),
+      },
+      "pop": {
+        "tempo_range": (85, 135),
+        "loudness_range": (0.25, 0.55),
+        "spectral_centroid_range": (2000, 3800),
+        "zcr_range": (0.04, 0.12),
+      },
+      "hip_hop": {
+        "tempo_range": (80, 120),
+        "loudness_range": (0.25, 0.5),
+        "spectral_centroid_range": (2000, 3500),
+        "zcr_range": (0.04, 0.1),
+      },
+      "electronic": {
+        "tempo_range": (100, 150),
+        "loudness_range": (0.3, 0.6),
+        "spectral_centroid_range": (2000, 5000),
+        "zcr_range": (0.05, 0.15),
+      },
+      "dance": {
+        "tempo_range": (115, 145),
+        "loudness_range": (0.35, 0.65),
+        "spectral_centroid_range": (2500, 4500),
+        "zcr_range": (0.05, 0.14),
+      },
     }
 
   def classify(self, features: Dict[str, Any]) -> Tuple[str, float]:
     """
     Classify genre based on audio features.
 
-    @param {object} features - Audio features from StyleAnalyzer
-    @returns {tuple} (genre_name, confidence_score)
+    Args:
+      features: Audio features from StyleAnalyzer
+
+    Returns:
+      Tuple of (genre_name, confidence_score) between 0-1
     """
     tempo = features.get("tempo", 100)
     loudness = features.get("loudness", 0.3)
     spectral = features.get("spectral_centroid", 2000)
+    zcr = features.get("zero_crossing_rate", 0.05)
 
     matches = []
 
     for genre, criteria in self.genres.items():
-      tempo_min, tempo_max = criteria["tempo_range"]
-      loudness_min = criteria["loudness_min"]
-
-      tempo_match = tempo_min <= tempo <= tempo_max
-      loudness_match = loudness >= loudness_min
-
-      if tempo_match and loudness_match:
-        # Calculate confidence
-        tempo_distance = min(
-          abs(tempo - tempo_min),
-          abs(tempo - tempo_max)
-        )
-        tempo_confidence = 1.0 - (tempo_distance / 50.0)
-        loudness_confidence = min(loudness / 0.8, 1.0)
-
-        confidence = (tempo_confidence + loudness_confidence) / 2.0
-        matches.append((genre, max(0, confidence)))
+      score = self._calculate_genre_score(
+        tempo, loudness, spectral, zcr, criteria
+      )
+      if score > 0:
+        matches.append((genre, score))
 
     if not matches:
       return "unknown", 0.0
 
     matches.sort(key=lambda x: x[1], reverse=True)
-    return matches[0]
+    best_genre, best_score = matches[0]
+    normalized_score = min(best_score / 1.0, 1.0)
+
+    return best_genre, normalized_score
+
+  def _calculate_genre_score(
+    self,
+    tempo: float,
+    loudness: float,
+    spectral: float,
+    zcr: float,
+    criteria: Dict[str, Tuple[float, float]]
+  ) -> float:
+    """Calculate how well features match genre criteria."""
+    score = 0.0
+    weights = {"tempo_range": 0.3, "loudness_range": 0.2,
+               "spectral_centroid_range": 0.3, "zcr_range": 0.2}
+
+    tempo_min, tempo_max = criteria["tempo_range"]
+    if tempo_min <= tempo <= tempo_max:
+      tempo_score = 1.0 - abs(tempo - (tempo_min + tempo_max) / 2) / (
+        (tempo_max - tempo_min) / 2 + 1e-6
+      )
+      score += weights["tempo_range"] * max(0, tempo_score)
+
+    loud_min, loud_max = criteria["loudness_range"]
+    if loud_min <= loudness <= loud_max:
+      loud_score = 1.0 - abs(loudness - (loud_min + loud_max) / 2) / (
+        (loud_max - loud_min) / 2 + 1e-6
+      )
+      score += weights["loudness_range"] * max(0, loud_score)
+
+    spec_min, spec_max = criteria["spectral_centroid_range"]
+    if spec_min <= spectral <= spec_max:
+      spec_score = 1.0 - abs(spectral - (spec_min + spec_max) / 2) / (
+        (spec_max - spec_min) / 2 + 1e-6
+      )
+      score += weights["spectral_centroid_range"] * max(0, spec_score)
+
+    zcr_min, zcr_max = criteria["zcr_range"]
+    if zcr_min <= zcr <= zcr_max:
+      zcr_score = 1.0 - abs(zcr - (zcr_min + zcr_max) / 2) / (
+        (zcr_max - zcr_min) / 2 + 1e-6
+      )
+      score += weights["zcr_range"] * max(0, zcr_score)
+
+    return score
 
   def get_genre_description(self, genre: str) -> str:
-    """
-    Get human-readable genre description.
-
-    @param {string} genre - Genre name
-    @returns {string} Description
-    """
+    """Get human-readable genre description."""
     descriptions = {
-      "electronic": "Electronic/Synth music",
-      "dance": "Dance/EDM",
-      "pop": "Pop music",
-      "rock": "Rock music",
+      "classical": "Classical/Orchestral",
+      "ambient": "Ambient/Atmospheric",
       "jazz": "Jazz",
       "blues": "Blues",
+      "rock": "Rock",
+      "pop": "Pop",
       "hip_hop": "Hip-Hop/Rap",
-      "classical": "Classical/Orchestral",
-      "ambient": "Ambient/Chill",
+      "electronic": "Electronic/Synth",
+      "dance": "Dance/EDM",
       "unknown": "Unknown genre",
     }
     return descriptions.get(genre, genre)
 
 
 class RhythmAnalyzer:
-  """
-  Analyze rhythm, beat patterns, and structural breaks in audio.
-  """
+  """Analyze rhythm, beat patterns, and structural breaks in audio."""
 
   def __init__(self, sample_rate: int = 16000):
-    """
-    Initialize rhythm analyzer.
-
-    @param {number} sample_rate - Audio sample rate in Hz
-    """
+    """Initialize rhythm analyzer."""
     self.sample_rate = sample_rate
 
   def analyze_rhythm(self, y: np.ndarray, sr: int) -> Dict[str, Any]:
-    """
-    Analyze rhythm and beat characteristics.
+    """Analyze rhythm and beat characteristics.
 
-    @param {array} y - Audio time series
-    @param {number} sr - Sample rate
-    @returns {object} Rhythm analysis results
+    Args:
+      y: Audio time series
+      sr: Sample rate
+
+    Returns:
+      Dictionary with rhythm analysis results
     """
     try:
-      # Detect beats and downbeats
       onset_env = librosa.onset.onset_strength(y=y, sr=sr)
       tempo, beats = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr)
 
-      # Calculate beat interval (regularity)
       if len(beats) > 1:
         beat_intervals = np.diff(beats)
-        beat_regularity = 1.0 - np.std(beat_intervals) / np.mean(beat_intervals)
+        beat_regularity = 1.0 - (np.std(beat_intervals) / (
+          np.mean(beat_intervals) + 1e-6
+        ))
       else:
         beat_regularity = 0.0
 
-      # Detect breaks (silence/low energy sections)
       breaks = self._detect_breaks(onset_env)
 
-      # Onset density (how syncopated)
       onset_density = len(librosa.onset.onset_detect(
         onset_envelope=onset_env,
         units='frames'
-      )) / len(onset_env)
+      )) / max(len(onset_env), 1)
 
       return {
         "tempo": float(tempo),
@@ -141,21 +213,15 @@ class RhythmAnalyzer:
     except Exception as error:
       raise ValueError(f"Rhythm analysis failed: {str(error)}")
 
-  def _detect_breaks(self, onset_env: np.ndarray, threshold: float = 0.1) -> List[int]:
-    """
-    Detect breaks (silent or low-energy sections).
-
-    @param {array} onset_env - Onset strength envelope
-    @param {number} threshold - Energy threshold for break detection
-    @returns {array} Indices of detected breaks
-    """
-    # Normalize
+  def _detect_breaks(
+    self,
+    onset_env: np.ndarray,
+    threshold: float = 0.1
+  ) -> List[int]:
+    """Detect breaks (silent or low-energy sections)."""
     onset_env_norm = onset_env / (np.max(onset_env) + 1e-6)
-
-    # Find low-energy sections
     breaks = np.where(onset_env_norm < threshold)[0]
 
-    # Group consecutive breaks
     if len(breaks) == 0:
       return []
 

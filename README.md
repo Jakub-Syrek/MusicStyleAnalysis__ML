@@ -1,13 +1,13 @@
-# Music Style Transfer
+# Music Analysis & Genre Classification
 
-Analyze musical style from reference audio and generate new music with similar characteristics.
+Analyze musical style from audio files and classify music genre based on comprehensive audio features.
 
 ## Features
 
-- Extract musical features (tempo, key, instrumentation, mood) from reference audio
-- Generate new music based on analyzed style using state-of-the-art AI models
+- Extract musical features (tempo, loudness, spectral centroid, zero crossing rate, MFCC)
+- Classify music into 9 genres: Classical, Ambient, Jazz, Blues, Rock, Pop, Hip-Hop, Electronic, Dance
+- Analyze rhythm and beat patterns (beat regularity, syncopation, structural breaks)
 - Support for multiple audio formats (WAV, MP3, FLAC)
-- Modular design for easy API/model swapping
 
 ## Quick Start
 
@@ -15,7 +15,7 @@ Analyze musical style from reference audio and generate new music with similar c
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/MusicStyleTransfer.git
+git clone https://github.com/Jakub-Syrek/MusicStyleTransfer.git
 cd MusicStyleTransfer
 
 # Create virtual environment
@@ -24,16 +24,13 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Configure API keys
-cp .env.example .env
-# Edit .env with your API credentials
 ```
 
 ### Usage
 
 #### Analyze Musical Style
-Extract features from a reference audio file:
+
+Extract features and classify genre from a reference audio file:
 
 ```bash
 python -m src analyze sample.wav
@@ -41,70 +38,83 @@ python -m src analyze sample.wav
 
 Output:
 ```
-📊 Musical Style Analysis
+[ANALYSIS] Musical Style Analysis
 ==================================================
-Tempo: 128.5 BPM
-Loudness: 0.456
-Spectral Centroid: 2048.3 Hz
-Zero Crossing Rate: 0.0145
-MFCC (13 coefficients): [12.34, 5.67, ...]
+Tempo: 170.5 BPM
+Loudness: 0.272
+Spectral Centroid: 2077.6 Hz
+Zero Crossing Rate: 0.0954
+MFCC (13 coefficients): ['-29.71', '59.95', '25.88', ...]
 ==================================================
-```
 
-#### Generate Music
-Create new music based on a reference style:
+[GENRE] Classification
+==================================================
+Genre: Electronic/Synth
+Confidence: 78.5%
+==================================================
 
-```bash
-# Basic usage
-python -m src generate sample.wav
-
-# Custom duration and output
-python -m src generate sample.wav --duration 60 --output my_music.wav
-
-# Specify API provider
-python -m src generate sample.wav --provider huggingface
+[RHYTHM] Beat & Rhythm Analysis
+==================================================
+Beat Regularity: 97.9% (how steady)
+Onset Density: 0.134 (syncopation)
+Strong Rhythm: Yes
+Detected Breaks: 5 (silent sections)
+==================================================
 ```
 
 #### Run Tests
 ```bash
 pytest tests/
 pytest tests/test_style_analyzer.py -v
-pytest tests/test_api_client.py -v
+pytest tests/test_genre_detector.py -v
 ```
 
 ## Project Status
 
-- [x] Project scaffold with CLAUDE.md directives
-- [x] Style analyzer implementation (tempo, loudness, spectral features, MFCC)
-- [x] Music generator orchestrator
-- [x] API client for Hugging Face integration
-- [x] CLI interface (analyze, generate commands)
-- [x] Unit tests with mocked dependencies
-- [ ] Real audio file testing
-- [ ] Web UI/API wrapper
-- [ ] Documentation and examples
+- [x] Audio feature extraction (tempo, loudness, spectral features, MFCC)
+- [x] Basic rhythm analysis (beat tracking, break detection)
+- [x] Improved genre classification (9 genres with multi-feature matching)
+- [x] CLI interface (analyze command)
+- [x] Comprehensive test coverage
+- [ ] Spectral features (chroma, rolloff, flatness)
+- [ ] Machine learning genre classifier (optional future enhancement)
 
 ## Architecture
 
 ### Style Analyzer
 Extracts key musical features:
-- Tempo and beat information
-- Key and harmonic content
-- Instrumentation
-- Loudness and dynamics
-- Genre/mood indicators
+- Tempo and beat information (via librosa.beat.tempo)
+- Loudness (RMS)
+- Spectral characteristics (centroid, rolloff)
+- Zero crossing rate (noisiness indicator)
+- Mel-frequency cepstral coefficients (MFCC)
 
-### Music Generator
-Generates audio using:
-- Hugging Face MusicGen model (default)
-- Fallback options: Jukebox, other open-source models
-- API-based generation for production use
+### Genre Detector
+Classifies music into genres using multi-dimensional feature matching:
+- Tempo ranges and confidence scoring
+- Loudness characteristics for each genre
+- Spectral profile matching
+- Zero crossing rate patterns
+- Weighted scoring system (tempo 30%, spectral 30%, loudness 20%, ZCR 20%)
 
-## API Integrations
+### Rhythm Analyzer
+Analyzes beat and rhythm characteristics:
+- Beat tracking and regularity
+- Onset detection (syncopation)
+- Break/silence detection
+- Rhythm strength estimation
 
-Currently configured for:
-- **Hugging Face Inference API** - MusicGen, other open-source models
-- **Optional**: Google MusicLM, OpenAI (if credentials provided)
+## Supported Genres
+
+1. **Classical/Orchestral** - Slower, orchestral textures
+2. **Ambient/Atmospheric** - Low tempo, subtle, peaceful
+3. **Jazz** - Variable tempo, syncopated rhythms
+4. **Blues** - Mid-range tempo, soulful character
+5. **Rock** - Fast to moderate, high energy
+6. **Pop** - Balanced, radio-friendly characteristics
+7. **Hip-Hop/Rap** - Medium tempo, rhythmic focus
+8. **Electronic/Synth** - Synthetic sounds, diverse tempos
+9. **Dance/EDM** - High tempo, energetic, regular beats
 
 ## Development
 
