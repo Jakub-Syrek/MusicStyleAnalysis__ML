@@ -9,7 +9,10 @@ Analyze musical style from audio files and classify music genre based on compreh
 - Return **top 10 genre matches** with confidence scores and genre families
 - Analyze rhythm and beat patterns (beat regularity, syncopation, structural breaks)
 - **Adaptive ML model** that learns from user feedback and improves predictions
-- Support for multiple audio formats (WAV, MP3, FLAC)
+- Support for multiple audio sources:
+  - Local audio files (WAV, MP3, FLAC, etc.)
+  - Direct HTTP/HTTPS URLs
+  - YouTube videos (automatic extraction)
 
 ## Quick Start
 
@@ -32,10 +35,17 @@ pip install -r requirements.txt
 
 #### Analyze Musical Style
 
-Extract features and classify genre from a reference audio file:
+Extract features and classify genre from audio sources:
 
 ```bash
+# Local audio file
 python -m src analyze sample.wav
+
+# Audio from HTTP URL
+python -m src analyze https://example.com/music/song.mp3
+
+# YouTube video (automatically extracts audio)
+python -m src analyze https://youtube.com/watch?v=dQw4w9WgXcQ
 ```
 
 Output:
@@ -108,6 +118,7 @@ pytest tests/test_genre_detector.py -v
 - [x] Adaptive ML model with feedback training (Random Forest, sklearn)
 - [x] User feedback system and model retraining
 - [x] Verbose mode with visual strength indicators
+- [x] Multi-source audio loading (local files, HTTP URLs, YouTube)
 - [ ] Spectral features (chroma, rolloff, flatness)
 - [ ] Web UI for visualization
 - [ ] Real-time analysis streaming
