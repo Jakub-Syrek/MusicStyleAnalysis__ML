@@ -123,17 +123,21 @@ def analyze_command(audio_path: str, verbose: bool = False,
   """Execute analyze command.
 
   Args:
-    audio_path: Path to audio file
+    audio_path: Path to audio file, HTTP URL, or YouTube URL
     verbose: Show detailed genre scores
   """
   try:
-    import librosa as lr
+    from src.audio_loader import AudioLoader
+
+    # Load audio from file, URL, or YouTube
+    loader = AudioLoader()
+    y, sr = loader.load(audio_path, sr=16000)
 
     analyzer = StyleAnalyzer()
-    features = analyzer.analyze(audio_path)
+    features = analyzer.analyze_from_audio(y, sr)
 
-    # Load audio for rhythm analysis
-    y, sr = lr.load(audio_path, sr=16000)
+    # Load audio for rhythm analysis (already loaded)
+    # y, sr already available from loader
 
     # ML model prediction (if available)
     from src.ml_trainer import MLTrainer

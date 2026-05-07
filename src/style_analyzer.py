@@ -34,18 +34,28 @@ class StyleAnalyzer:
         """
         try:
             y, sr = librosa.load(audio_path, sr=self.sample_rate)
-
-            features = {
-                "tempo": self._extract_tempo(y, sr),
-                "loudness": self._extract_loudness(y),
-                "spectral_centroid": self._extract_spectral_features(y, sr),
-                "zero_crossing_rate": self._extract_zcr(y),
-                "mfcc": self._extract_mfcc(y, sr),
-            }
-
-            return features
+            return self.analyze_from_audio(y, sr)
         except Exception as error:
             raise ValueError(f"Failed to analyze audio file {audio_path}: {str(error)}")
+
+    def analyze_from_audio(self, y: np.ndarray, sr: int) -> Dict[str, Any]:
+        """Analyze musical style from audio data.
+
+        Args:
+            y: Audio time series
+            sr: Sample rate
+
+        Returns:
+            Dictionary containing style features
+        """
+        features = {
+            "tempo": self._extract_tempo(y, sr),
+            "loudness": self._extract_loudness(y),
+            "spectral_centroid": self._extract_spectral_features(y, sr),
+            "zero_crossing_rate": self._extract_zcr(y),
+            "mfcc": self._extract_mfcc(y, sr),
+        }
+        return features
 
     def _extract_tempo(self, y: np.ndarray, sr: int) -> float:
         """Extract tempo from audio.
