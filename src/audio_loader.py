@@ -4,18 +4,36 @@ Download and load audio files from URLs or local paths.
 Supports:
 - Local files (WAV, MP3, FLAC, etc.)
 - Direct HTTP URLs to audio files
-- YouTube videos (via yt-dlp)
+- YouTube videos (via yt-dlp with bundled FFmpeg)
 """
 
 import os
 import glob
-import tempfile
 import shutil
-from pathlib import Path
+import tempfile
 from typing import Tuple
 import requests
 import librosa
 import numpy as np
+
+
+def _ensure_ffmpeg() -> bool:
+    """Ensure FFmpeg is available, using bundled binaries if needed.
+
+    Returns:
+        True if FFmpeg is available (system or bundled), False otherwise.
+    """
+    if shutil.which('ffmpeg') and shutil.which('ffprobe'):
+        return True
+
+    try:
+        import static_ffmpeg
+        static_ffmpeg.add_paths()
+        return shutil.which('ffmpeg') is not None
+    except ImportError:
+        return False
+    except Exception:
+        return False
 
 
 class AudioLoader:
@@ -25,7 +43,7 @@ class AudioLoader:
         """Initialize audio loader.
 
         Args:
-            temp_dir: Directory for temporary files. Uses /tmp if None.
+            temp_dir: Directory for temporary files. Uses system temp if None.
         """
         self.temp_dir = temp_dir or tempfile.gettempdir()
         self.cleanup_paths = []
@@ -43,11 +61,9 @@ class AudioLoader:
         Raises:
             ValueError: If source is invalid or loading fails
         """
-        # Try local file first
         if os.path.isfile(source):
             return self._load_file(source, sr)
 
-        # Check if URL
         if source.startswith(('http://', 'https://')):
             return self._load_url(source, sr)
 
@@ -64,11 +80,8 @@ class AudioLoader:
 
     def _load_url(self, url: str, sr: int) -> Tuple[np.ndarray, int]:
         """Load audio from URL."""
-        # YouTube URL
         if 'youtube.com' in url or 'youtu.be' in url:
             return self._load_youtube(url, sr)
-
-        # Direct audio file URL
         return self._load_direct_url(url, sr)
 
     def _load_youtube(self, url: str, sr: int) -> Tuple[np.ndarray, int]:
@@ -80,86 +93,56 @@ class AudioLoader:
                 "yt-dlp not installed. Run: pip install yt-dlp"
             )
 
+        if not _ensure_ffmpeg():
+            raise ValueError(
+                "FFmpeg not available. Install bundled FFmpeg with:\n"
+                "  pip install static-ffmpeg\n"
+                "Or install system-wide:\n"
+                "  Windows: choco install ffmpeg\n"
+                "  macOS:   brew install ffmpeg\n"
+                "  Linux:   sudo apt-get install ffmpeg"
+            )
+
         temp_base = os.path.join(self.temp_dir, "youtube_audio")
+        self._cleanup_temp_files(temp_base)
 
         try:
-            has_ffmpeg = self._check_ffmpeg()
-
             ydl_opts = {
                 'format': 'bestaudio/best',
-                'outtmpl': temp_base,
+                'outtmpl': temp_base + '.%(ext)s',
                 'quiet': True,
                 'no_warnings': True,
-            }
-
-            if has_ffmpeg:
-                ydl_opts['postprocessors'] = [{
+                'postprocessors': [{
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'wav',
                     'preferredquality': '192',
-                }]
+                }],
+            }
 
             print(f"[DOWNLOAD] YouTube: {url}")
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.extract_info(url, download=True)
 
-            temp_file = None
-            for ext in ['wav', 'webm', 'm4a', 'mp4', 'mkv', '']:
-                candidate = f"{temp_base}.{ext}" if ext else temp_base
-                if os.path.exists(candidate):
-                    temp_file = candidate
-                    break
-
-            if not temp_file:
+            wav_file = f"{temp_base}.wav"
+            if not os.path.exists(wav_file):
                 candidates = glob.glob(f"{temp_base}*")
-                if candidates:
-                    temp_file = sorted(candidates)[-1]
+                if not candidates:
+                    raise ValueError("Downloaded audio file not found")
+                wav_file = sorted(candidates)[-1]
 
-            if not temp_file or not os.path.exists(temp_file):
-                error_msg = (
-                    "Failed to locate downloaded audio file. "
-                    "YouTube support requires FFmpeg for audio conversion.\n\n"
-                    "Install FFmpeg:\n"
-                    "  Windows: choco install ffmpeg\n"
-                    "  macOS:   brew install ffmpeg\n"
-                    "  Linux:   sudo apt-get install ffmpeg\n"
-                    "  Or download from: https://ffmpeg.org/download.html"
-                )
-                raise ValueError(error_msg)
-
-            self.cleanup_paths.append(temp_file)
-            try:
-                return self._load_file(temp_file, sr)
-            except ValueError as e:
-                if "Failed to load" in str(e) and not has_ffmpeg:
-                    error_msg = (
-                        f"Cannot load downloaded audio format. "
-                        f"YouTube support requires FFmpeg for audio conversion.\n\n"
-                        f"Install FFmpeg:\n"
-                        f"  Windows: choco install ffmpeg\n"
-                        f"  macOS:   brew install ffmpeg\n"
-                        f"  Linux:   sudo apt-get install ffmpeg\n"
-                        f"  Or download from: https://ffmpeg.org/download.html"
-                    )
-                    raise ValueError(error_msg)
-                raise
+            self.cleanup_paths.append(wav_file)
+            return self._load_file(wav_file, sr)
 
         except Exception as e:
             raise ValueError(f"Failed to load YouTube: {str(e)}")
 
-    def _check_ffmpeg(self) -> bool:
-        """Check if FFmpeg is available on the system."""
-        import subprocess
-        try:
-            subprocess.run(
-                ['ffmpeg', '-version'],
-                capture_output=True,
-                timeout=2,
-                check=False
-            )
-            return True
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            return False
+    def _cleanup_temp_files(self, base_path: str) -> None:
+        """Remove leftover temporary files matching base path."""
+        for f in glob.glob(f"{base_path}*"):
+            try:
+                os.remove(f)
+            except Exception:
+                pass
 
     def _load_direct_url(self, url: str, sr: int) -> Tuple[np.ndarray, int]:
         """Download and load audio from direct HTTP URL."""

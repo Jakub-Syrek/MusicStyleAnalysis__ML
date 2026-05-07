@@ -44,23 +44,11 @@ python -m src analyze sample.wav
 # Audio from HTTP URL
 python -m src analyze https://example.com/music/song.mp3
 
-# YouTube video (requires FFmpeg - see below)
+# YouTube video (FFmpeg bundled via static-ffmpeg)
 python -m src analyze https://youtube.com/watch?v=dQw4w9WgXcQ
 ```
 
-**YouTube Support (Optional):** YouTube video analysis requires FFmpeg:
-```bash
-# Windows (using Chocolatey)
-choco install ffmpeg
-
-# macOS (using Homebrew)
-brew install ffmpeg
-
-# Linux (Debian/Ubuntu)
-sudo apt-get install ffmpeg
-
-# Or download from https://ffmpeg.org/download.html
-```
+FFmpeg is bundled automatically via `static-ffmpeg` (included in `requirements.txt`). No system install required—the binary is downloaded on first YouTube use and cached in the virtualenv.
 
 Output:
 ```
