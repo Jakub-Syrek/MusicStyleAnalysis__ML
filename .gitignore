@@ -69,4 +69,3 @@ logs/
 # Auto-generated ML models and training data
 genre_model.pkl
 training_data.csv
-CLAUDE.md
