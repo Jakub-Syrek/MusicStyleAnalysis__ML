@@ -1,21 +1,21 @@
 # Music Style Transfer - Technical Overview
 
-## Co robi aplikacja?
+## What Does This Application Do?
 
-**Music Style Transfer** analizuje oryginalny utwór muzyczny i generuje nową muzykę zachowującą jego charakterystykę stylową.
+**Music Style Transfer** analyzes an original musical track and generates new music while preserving its stylistic characteristics.
 
-### Przykład:
+### Example:
 ```
-INPUT: reference.wav (utwór Pop, 125 BPM, energetyczny)
+INPUT: reference.wav (Pop song, 125 BPM, energetic)
          ↓
-   [ANALIZA STYLU]
+   [STYLE ANALYSIS]
          ↓
-OUTPUT: generated_music.wav (nowa melodia, ale taki sam styl)
+OUTPUT: generated_music.wav (new melody, same style)
 ```
 
 ---
 
-## Architektura Systemu
+## System Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -23,24 +23,24 @@ OUTPUT: generated_music.wav (nowa melodia, ale taki sam styl)
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │  INPUT AUDIO                                               │
-│  └─→ reference.wav (np. 15 sekund, Pop, 125 BPM)          │
+│  └─→ reference.wav (e.g., 15 seconds, Pop, 125 BPM)       │
 │                                                             │
 │  ╔═══════════════════════════════════════════════════════╗ │
-│  ║ FAZA 1: ANALIZA STYLU (StyleAnalyzer)                ║ │
+│  ║ PHASE 1: STYLE ANALYSIS (StyleAnalyzer)              ║ │
 │  ╠═══════════════════════════════════════════════════════╣ │
-│  ║ Ekstrakcja 12+ cech audio:                           ║ │
+│  ║ Extract 12+ audio features:                          ║ │
 │  ║ • Tempo (125.0 BPM)                                  ║ │
 │  ║ • Loudness (0.369)                                   ║ │
 │  ║ • Spectral Centroid (2868 Hz)                        ║ │
 │  ║ • Zero Crossing Rate (0.0717)                        ║ │
 │  ║ • MFCC 13 coefficients                               ║ │
-│  ║ • i inne...                                          ║ │
+│  ║ • And more...                                        ║ │
 │  ╚═══════════════════════════════════════════════════════╝ │
 │                                                             │
 │  ╔═══════════════════════════════════════════════════════╗ │
-│  ║ FAZA 2: KLASYFIKACJA (GenreDetector)                 ║ │
+│  ║ PHASE 2: CLASSIFICATION (GenreDetector)              ║ │
 │  ╠═══════════════════════════════════════════════════════╣ │
-│  ║ Określenie gatunku na podstawie cech:                ║ │
+│  ║ Determine genre based on features:                   ║ │
 │  ║ • Genre: Pop (68% confidence)                        ║ │
 │  ║ • Beat Regularity: 93.7%                             ║ │
 │  ║ • Syncopation: 0.132                                 ║ │
@@ -48,120 +48,120 @@ OUTPUT: generated_music.wav (nowa melodia, ale taki sam styl)
 │  ╚═══════════════════════════════════════════════════════╝ │
 │                                                             │
 │  ╔═══════════════════════════════════════════════════════╗ │
-│  ║ FAZA 3: GENERACJA (MusicGenerator)                   ║ │
+│  ║ PHASE 3: GENERATION (MusicGenerator)                 ║ │
 │  ╠═══════════════════════════════════════════════════════╣ │
-│  ║ Wybór metody generacji (fallback chain):            ║ │
+│  ║ Select generation method (fallback chain):           ║ │
 │  ║ 1. Local MusicGen (transformers)                     ║ │
-│  ║    └─→ Konwersja cech → tekst prompt                ║ │
+│  ║    └─→ Convert features → text prompt                ║ │
 │  ║        "Create upbeat Pop music, 125 BPM..."         ║ │
-│  ║        └─→ Neural network generuje audio            ║ │
+│  ║        └─→ Neural network generates audio            ║ │
 │  ║                                                       ║ │
 │  ║ 2. Hugging Face API                                  ║ │
 │  ║    └─→ Cloud-based inference                        ║ │
 │  ║                                                       ║ │
 │  ║ 3. Synthetic Fallback                                ║ │
-│  ║    └─→ Algorithmiczne tworzenie fali audio          ║ │
+│  ║    └─→ Algorithmic audio generation                 ║ │
 │  ╚═══════════════════════════════════════════════════════╝ │
 │                                                             │
 │  OUTPUT AUDIO                                              │
-│  └─→ generated_music.wav (30 sekund, Pop, 125 BPM)       │
-│      [Nowa melodia, zachowany styl]                       │
+│  └─→ generated_music.wav (30 seconds, Pop, 125 BPM)      │
+│      [New melody, preserved style]                         │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Technologie Szczegółowo
+## Technologies in Detail
 
-### 1. AUDIO ANALYSIS (Faza Analiza)
+### 1. AUDIO ANALYSIS (Analysis Phase)
 
-#### Biblioteka: **librosa**
-- Industry standard dla music information retrieval
+#### Library: **librosa**
+- Industry standard for music information retrieval
 - Convolution-based spectral analysis
 
-**Ekstrahowane cechy:**
+**Extracted Features:**
 
-| Cecha | Znaczenie | Technologia |
-|-------|-----------|-------------|
-| **Tempo** | BPM (beats per minute) | Onset detection + beat tracking |
-| **Loudness** | Amplituda RMS | Root Mean Square energy |
-| **Spectral Centroid** | "Jasność" dźwięku (Hz) | Weighted average of frequencies |
-| **Zero Crossing Rate** | Szrapnięcia/szumy | Rate of sign changes |
-| **MFCC (13)** | "Odcisk palca" dźwięku | Mel-Frequency Cepstral Coefficients |
+| Feature | Meaning | Technology |
+|---------|---------|-----------|
+| **Tempo** | Beats per minute (BPM) | Onset detection + beat tracking |
+| **Loudness** | Amplitude RMS | Root Mean Square energy |
+| **Spectral Centroid** | "Brightness" of sound (Hz) | Weighted average of frequencies |
+| **Zero Crossing Rate** | Harshness/noise level | Rate of sign changes in waveform |
+| **MFCC (13)** | "Fingerprint" of sound | Mel-Frequency Cepstral Coefficients |
 
-**Kod:**
+**Code:**
 ```python
 # Tempo extraction
 onset_env = librosa.onset.onset_strength(y=y, sr=sr)
 tempo = librosa.beat.tempo(onset_envelope=onset_env, sr=sr)
 
-# MFCC (jak ludzie słyszą)
+# MFCC (how humans hear)
 mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
 ```
 
-**Dlaczego MFCC?**
-- Ludzie słyszą logarytmicznie, nie liniowo
-- MFCC oddaje ludzką percepcję dźwięku
-- Standard w speech recognition i music analysis
+**Why MFCC?**
+- Humans hear logarithmically, not linearly
+- MFCC captures human auditory perception
+- Industry standard in speech recognition and music analysis
 
 ---
 
-### 2. GENRE CLASSIFICATION (Faza Klasyfikacja)
+### 2. GENRE CLASSIFICATION (Classification Phase)
 
-#### Biblioteka: **music21**
-- Analiza muzyki na poziomie teorii muzyki
-- Klasyfikacja oparta na cechach
+#### Library: **music21**
+- Music analysis at the music theory level
+- Classification based on features
 
-**Algorytm:**
+**Algorithm:**
 ```
-Dla każdego gatunku:
-  IF tempo w range(90-130) AND loudness > 0.3:
+For each genre:
+  IF tempo in range(90-130) AND loudness > 0.3:
     Confidence = (tempo_match + loudness_match) / 2
 ```
 
-**9 Gatunków obsługiwanych:**
-- Jazz, Blues, Classical, Ambient (wolne)
-- Pop, Hip-Hop (średnie)
-- Rock, Electronic, Dance (szybkie)
+**9 Supported Genres:**
+- Jazz, Blues, Classical, Ambient (slow)
+- Pop, Hip-Hop (medium)
+- Rock, Electronic, Dance (fast)
 
 **Rhythm Analysis:**
 ```python
-# Beat regularity - jak steady jest beat
+# Beat regularity - how steady is the beat
 beat_intervals = np.diff(beat_positions)
 regularity = 1.0 - np.std(beat_intervals) / np.mean(beat_intervals)
 
-# Onset density - jak synkopowany
+# Onset density - how syncopated
 syncopation = len(onsets) / len(onset_envelope)
 ```
 
 ---
 
-### 3. MUSIC GENERATION (Faza Generacja)
+### 3. MUSIC GENERATION (Generation Phase)
 
-#### Metoda 1: Local MusicGen (Recommended)
+#### Method 1: Local MusicGen (Recommended)
 
-**Architektura:**
+**Architecture:**
 ```
 Input: "Create upbeat Pop music, 125 BPM, energetic"
   ↓
-[Tokenizer - rozbija tekst na tokens]
+[Tokenizer - breaks text into tokens]
   ↓
-[Transformer Encoder - robi embedding tekstu]
+[Transformer Encoder - creates text embeddings]
   ↓
-[Autoregressive Decoder - generuje audio token po tokenie]
+[Autoregressive Decoder - generates audio token by token]
   ↓
-[Vocoder - konwertuje tokens na waveform]
+[Vocoder - converts tokens into waveform]
   ↓
 Output: audio waveform (16kHz, mono)
 ```
 
 **Model: facebook/musicgen-small**
-- Parametry: 300M parameters
-- Training data: AudioSet (10M+ clips)
-- Tekst → Audio (text-conditioned generation)
+- Parameters: 300M
+- Training data: AudioSet (10M+ audio clips)
+- Capability: Text-to-Audio generation
 
-**Kod generacji:**
+**Generation Code:**
 ```python
 from transformers import AutoProcessor, MusicgenForConditionalGeneration
 
@@ -172,16 +172,16 @@ inputs = processor(text=[prompt], return_tensors="pt")
 outputs = model.generate(**inputs, max_length=duration * 50)
 ```
 
-**Jak tekstowy prompt wpływa na output?**
+**How Text Prompt Influences Output?**
 - "Upbeat electronic dance music" → Fast, synthy, energetic
-- "Soft ambient music" → Slow, atmospheric, reverby
+- "Soft ambient music" → Slow, atmospheric, reverberant
 - "Rock guitar solo" → Hard attack, higher frequencies
 
 ---
 
-#### Metoda 2: Hugging Face Inference API
+#### Method 2: Hugging Face Inference API
 
-**Protokół:**
+**Protocol:**
 ```
 POST https://api-inference.huggingface.co/models/{model}
 Headers: Authorization: Bearer {API_KEY}
@@ -189,57 +189,57 @@ Body: {"inputs": "Create upbeat Pop music"}
 Response: <audio bytes in WAV format>
 ```
 
-**Zalety:**
-- Cloud-based (nie trzeba GPU lokalnie)
-- Skaluje się automatycznie
-- Zawsze najnowszy model
+**Advantages:**
+- Cloud-based (no local GPU needed)
+- Automatic scaling
+- Always latest model version
 
-**Wady:**
-- Wymaga API key
-- Wolniejsze (network latency)
-- API limits
+**Disadvantages:**
+- Requires API key
+- Slower (network latency)
+- API rate limits
 
 ---
 
-#### Metoda 3: Fallback - Synthetic Generation
+#### Method 3: Fallback - Synthetic Generation
 
-**Algorytm:**
+**Algorithm:**
 ```python
-# Konwersja Tempo → Frequency
+# Convert Tempo → Frequency
 base_freq = 440 Hz (A4)
-tempo_ratio = tempo / 120 BPM (referencja)
+tempo_ratio = tempo / 120 BPM (reference)
 frequency = 440 * tempo_ratio
 
-# Generacja multi-harmoniczna
+# Generate multi-harmonic wave
 t = [0, duration]
 wave = sin(2π * f * t)         +  # Fundamental
        0.5 * sin(2π * 1.5f * t) +  # Harmonic
        0.25 * sin(2π * 2f * t)     # Overtone
 ```
 
-**Dlaczego to działa?**
-- Tempo → Frequency (zachowuje szybkość poczucia)
-- Harmoniki → Bogatość tonalna
-- Noise → Naturalne brzmienie
+**Why Does This Work?**
+- Tempo → Frequency (preserves feeling of speed)
+- Harmonics → Tonal richness
+- Noise → Natural sound quality
 
 ---
 
-## Porównanie Metod Generacji
+## Generation Methods Comparison
 
-| Aspekt | Local MusicGen | HF API | Synthetic |
+| Aspect | Local MusicGen | HF API | Synthetic |
 |--------|---|---|---|
-| **Jakość** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
-| **Szybkość** | Medium | Fast | ⭐⭐⭐⭐⭐ |
-| **Wymaga GPU** | Tak | Nie | Nie |
-| **Wymaga API key** | Nie | Tak | Nie |
-| **Koszt** | 0 (jeden raz) | $/query | 0 |
-| **Niespodzianki** | AI-generated | AI-generated | Predictable |
+| **Quality** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Speed** | Medium | Fast | ⭐⭐⭐⭐⭐ |
+| **Requires GPU** | Yes | No | No |
+| **Requires API Key** | No | Yes | No |
+| **Cost** | Free (one-time) | $/query | Free |
+| **Surprises** | AI-generated | AI-generated | Predictable |
 
 ---
 
-## Workflow: Od Analizy do Generacji
+## Workflow: From Analysis to Generation
 
-### Przykład: Original = "Smooth Jazz"
+### Example: Original = "Smooth Jazz"
 
 ```
 STEP 1: ANALYZE original.wav (30s, Jazz, 85 BPM)
@@ -271,9 +271,9 @@ STEP 4: OUTPUT
 
 ---
 
-## Dlaczego to Działa?
+## Why This Works
 
-### Teza: Style = Features + Patterns
+### Thesis: Style = Features + Patterns
 
 ```
 ORIGINAL SONG STYLE = {
@@ -291,9 +291,9 @@ TEXT PROMPT (created from style):
 "Create upbeat Pop music, 125 BPM, energetic, bright sound, 
  strong beat, 0.4 loudness, 2500 Hz spectral profile"
 
-MUSICGEN → Interpretuje prompt jako constraints
-          → Generuje audio które je spełnia
-          → Wynik: różna melodia, TAKI SAM STYL
+MUSICGEN → Interprets prompt as constraints
+          → Generates audio that satisfies them
+          → Result: different melody, SAME STYLE
 ```
 
 ---
@@ -303,7 +303,7 @@ MUSICGEN → Interpretuje prompt jako constraints
 ### 1. Creative Variation
 ```
 Original: "Artist's Demo"
-Generated: 10 variations w tym samym stylu
+Generated: 10 variations in the same style
 Use: Brainstorming, inspiration
 ```
 
@@ -330,25 +330,25 @@ Use: Ads, videos, notifications
 
 ---
 
-## Limitations & Future
+## Current Limitations & Future
 
-### Obecne ograniczenia:
-- MusicGen generuje monophonic audio (1 track)
-- Brak kontroli nad instrumentami
-- Długość max ~30 sekund
-- Quality = Training data quality
+### Current Limitations:
+- MusicGen generates monophonic audio (single track)
+- No control over instruments
+- Maximum ~30 seconds per generation
+- Quality limited by training data quality
 
-### Rozszerzenia:
+### Future Improvements:
 - [ ] Multi-track generation (orchestration)
 - [ ] Instrument-specific control
 - [ ] Longer sequences (minutes)
-- [ ] MIDI export (edytowalne)
+- [ ] MIDI export (editable)
 - [ ] Real-time parameter adjustment
-- [ ] Fine-tuning na custom styles
+- [ ] Fine-tuning on custom styles
 
 ---
 
-## Stack Techniczny (Summary)
+## Technology Stack (Summary)
 
 ```
 ┌─────────────────────────────────────┐
@@ -385,23 +385,23 @@ Use: Ads, videos, notifications
 
 ---
 
-## Podsumowanie
+## Summary
 
-**Music Style Transfer** to system który:
-1. **Analizuje** oryginalny utwór na 12+ wymiarach
-2. **Klasyfikuje** gatunek i charakterystykę
-3. **Tłumaczy** cechy na tekst ("Create upbeat Pop...")
-4. **Generuje** nową muzykę używając AI
-5. **Zachowuje** styl, ale zmienia treść (melodię)
+**Music Style Transfer** is a system that:
+1. **Analyzes** original audio on 12+ dimensions
+2. **Classifies** genre and characteristics
+3. **Converts** features to text ("Create upbeat Pop...")
+4. **Generates** new music using AI
+5. **Preserves** style while changing content (melody)
 
-**Magią** jest to, że AI rozumie styl na poziomie abstrakcyjnym i potrafi go reprodukować w zupełnie nowych kompozycjach.
+**The Magic** is that AI understands style at an abstract level and can reproduce it in completely new compositions.
 
-**Analogia:**
+**Analogy:**
 ```
-Jak tłumacz językowy tłumaczy TREŚĆ zachowując STYL,
-tak MusicGen tłumaczy MELODIĘ zachowując STYL MUZYCZNY.
+Just like a language translator translates CONTENT while preserving STYLE,
+MusicGen translates MELODY while preserving MUSICAL STYLE.
 ```
 
 ---
 
-**Repo:** https://github.com/Jakub-Syrek/MusicStyleTransfer
+**Repository**: https://github.com/Jakub-Syrek/MusicStyleTransfer
