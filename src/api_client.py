@@ -29,10 +29,10 @@ class MusicGenerationClient:
     """
 
     def __init__(self, provider: str = "huggingface"):
-        """
-        Initialize music generation client.
+        """Initialize music generation client.
 
-        @param {string} provider - API provider ("huggingface", "google", etc)
+        Args:
+            provider: API provider ("huggingface", "google", etc)
         """
         self.provider = provider
         self.api_key = os.getenv(f"{provider.upper()}_API_KEY")
@@ -46,15 +46,17 @@ class MusicGenerationClient:
         duration: int = 30,
         **options: Any
     ) -> bytes:
-        """
-        Generate music based on prompt.
+        """Generate music based on prompt.
 
         Tries: Local transformers → HTTP API → Fallback synthesis
 
-        @param {string} prompt - Text description of desired music
-        @param {number} duration - Duration in seconds
-        @param {object} options - Additional generation parameters
-        @returns {bytes} Generated audio data
+        Args:
+            prompt: Text description of desired music
+            duration: Duration in seconds
+            **options: Additional generation parameters
+
+        Returns:
+            Generated audio data (bytes)
         """
         if self.provider == "huggingface":
             # Try local model first
