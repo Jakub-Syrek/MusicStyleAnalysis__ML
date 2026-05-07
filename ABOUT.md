@@ -506,4 +506,4 @@ Jakub Syrek - 2026
 
 **Music Analysis & Genre Classification** - Understand and learn from your music. 🎵
 
-**Repository**: https://github.com/Jakub-Syrek/MusicStyleTransfer
+**Repository**: https://github.com/Jakub-Syrek/MusicStyleAnalysisML

@@ -17,8 +17,8 @@ Analyze musical style from audio files and classify music genre based on compreh
 
 ```bash
 # Clone repository
-git clone https://github.com/Jakub-Syrek/MusicStyleTransfer.git
-cd MusicStyleTransfer
+git clone https://github.com/Jakub-Syrek/MusicStyleAnalysisML.git
+cd MusicStyleAnalysisML
 
 # Create virtual environment
 python -m venv venv
