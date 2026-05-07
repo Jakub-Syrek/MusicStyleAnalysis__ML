@@ -10,7 +10,7 @@
 source venv/bin/activate     # Linux/Mac
 
 # Analyze a reference track
-python -m src analyze samples/jazz_reference.mp3
+python -m src analyze sample.wav
 ```
 
 **Expected output:**
@@ -33,16 +33,16 @@ MFCC (13 coefficients): ...
 HUGGINGFACE_API_KEY=hf_xxxxxxxxxxxxxxxxxxxx
 
 # Generate 30 seconds of music matching reference style
-python -m src generate samples/reference.mp3 --duration 30 --output generated.wav
+python -m src generate sample.wav --duration 30 --output generated.wav
 ```
 
 #### With Different Providers
 ```bash
 # Google MusicLM (if configured)
-python -m src generate samples/reference.mp3 --provider google
+python -m src generate sample.wav --provider google
 
 # Custom output location
-python -m src generate samples/reference.mp3 --output ./results/my_music.wav
+python -m src generate sample.wav --output ./results/my_music.wav
 ```
 
 ## Development Workflow

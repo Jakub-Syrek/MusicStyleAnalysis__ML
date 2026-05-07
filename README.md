@@ -36,7 +36,7 @@ cp .env.example .env
 Extract features from a reference audio file:
 
 ```bash
-python -m src analyze reference_track.mp3
+python -m src analyze sample.wav
 ```
 
 Output:
@@ -56,13 +56,13 @@ Create new music based on a reference style:
 
 ```bash
 # Basic usage
-python -m src generate reference_track.mp3
+python -m src generate sample.wav
 
 # Custom duration and output
-python -m src generate reference_track.mp3 --duration 60 --output my_music.wav
+python -m src generate sample.wav --duration 60 --output my_music.wav
 
 # Specify API provider
-python -m src generate reference_track.mp3 --provider huggingface
+python -m src generate sample.wav --provider huggingface
 ```
 
 #### Run Tests

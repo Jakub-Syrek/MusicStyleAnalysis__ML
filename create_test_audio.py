@@ -40,5 +40,5 @@ def create_test_audio(
 
 
 if __name__ == "__main__":
-  create_test_audio("reference.wav", duration=15)
-  print("\nTest audio ready! Run: python -m src analyze reference.wav")
+  create_test_audio("sample.wav", duration=15)
+  print("\nTest audio ready! Run: python -m src analyze sample.wav")
