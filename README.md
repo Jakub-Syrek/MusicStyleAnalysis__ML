@@ -177,8 +177,6 @@ Run tests before committing:
 pytest tests/
 ```
 
-Follow code standards in CLAUDE.md.
-
 ## License
 
 MIT
