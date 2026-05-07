@@ -162,13 +162,14 @@ class MusicGenerationClient:
         prompt: str,
         duration: int
     ) -> bytes:
-        """Fallback: Generate synthetic audio preserving original style.
+        """Fallback: Generate synthetic audio with drums, bass, and melody.
 
-        Creates more sophisticated audio by:
-        - Matching spectral profile of original
-        - Preserving beat patterns
-        - Adding harmonic richness and variation
-        - Including envelope shaping
+        Creates layered audio with:
+        - Kick drum pattern at original tempo
+        - Bass line (80-120 Hz) moving between notes
+        - Melodic layer (400-1200 Hz) with variations
+        - Snare/hi-hat patterns
+        - Realistic envelope shaping
 
         Args:
             prompt: Generation prompt (contains style info)
@@ -182,53 +183,87 @@ class MusicGenerationClient:
             import soundfile as sf
             from io import BytesIO
 
-            # Parse features from prompt
             tempo = self._extract_tempo_from_prompt(prompt)
-            frequency = self._tempo_to_frequency(tempo)
-
             sample_rate = 16000
             samples = int(sample_rate * duration)
             t = np.linspace(0, duration, samples, False)
 
-            # Generate beat pattern (drums-like)
-            beat_freq = tempo / 60.0  # Convert BPM to Hz
-            beat_pattern = 0.4 * np.sin(2 * np.pi * beat_freq * t)
-            beat_pattern += 0.2 * np.sin(2 * np.pi * beat_freq * 2 * t)
+            beat_samples = int(sample_rate * 60 / tempo)
 
-            # Generate melodic content (complex harmonics)
-            melodic = (
-                0.25 * np.sin(2 * np.pi * frequency * t) +
-                0.15 * np.sin(2 * np.pi * frequency * 1.5 * t) +
-                0.10 * np.sin(2 * np.pi * frequency * 2 * t) +
-                0.08 * np.sin(2 * np.pi * frequency * 0.75 * t) +
-                0.06 * np.sin(2 * np.pi * frequency * 2.5 * t)
-            )
+            # Create click track to time drum hits
+            kick_envelope = np.zeros(samples)
+            hi_hat_envelope = np.zeros(samples)
+            snare_envelope = np.zeros(samples)
 
-            # Add variation (avoid monotony)
-            variation = 0.15 * np.sin(2 * np.pi * 0.5 * t)
-            modulated = melodic * (1.0 + 0.3 * variation)
+            for beat_idx in range(int(duration * tempo / 60) + 1):
+                beat_pos = int(beat_idx * beat_samples)
+                if beat_pos >= samples:
+                    break
 
-            # Combine beat + melodic
-            combined = 0.6 * modulated + 0.4 * beat_pattern
+                kick_len = int(0.1 * sample_rate)
+                kick_envelope[beat_pos:beat_pos+kick_len] = 1.0
 
-            # Add realistic texture (not just sine waves)
-            noise = 0.05 * np.random.randn(samples)
-            combined += noise
+                if beat_idx % 2 == 0:
+                    snare_len = int(0.08 * sample_rate)
+                    snare_pos = beat_pos + int(beat_samples * 0.5)
+                    if snare_pos + snare_len < samples:
+                        snare_envelope[snare_pos:snare_pos+snare_len] = 1.0
 
-            # Apply envelope (fade in/out to avoid clicks)
-            envelope = np.ones(samples)
-            fade_samples = int(0.05 * sample_rate)  # 50ms
-            envelope[:fade_samples] = np.linspace(0, 1, fade_samples)
-            envelope[-fade_samples:] = np.linspace(1, 0, fade_samples)
+                for sub in range(0, beat_samples, int(beat_samples / 8)):
+                    hat_pos = beat_pos + sub
+                    if hat_pos < samples:
+                        kick_envelope[hat_pos:hat_pos+100] += 0.3
 
-            audio = combined * envelope
+            kick_decay = np.exp(-np.arange(samples) / (0.1 * sample_rate))
+            kick_envelope *= kick_decay
 
-            # Normalize to safe level
+            # Generate kick drum (80 Hz fundamental, decaying)
+            kick = np.sin(2 * np.pi * 80 * t) * kick_envelope
+            kick += 0.5 * np.sin(2 * np.pi * 40 * t) * kick_envelope
+            kick = kick * np.exp(-3 * t % 1.0)
+
+            # Generate snare (white noise + high freq)
+            snare = 0.5 * np.random.randn(samples) * snare_envelope
+            snare += 0.4 * np.sin(2 * np.pi * 200 * t) * snare_envelope
+
+            # Generate hi-hat (filtered noise)
+            hat_noise = np.random.randn(samples)
+            hi_hat = 0.25 * hat_noise * hi_hat_envelope
+            hi_hat += 0.15 * np.sin(2 * np.pi * 8000 * t) * hi_hat_envelope
+
+            # Bass line (oscillates between 80-120 Hz)
+            bass_freq_env = 80 + 40 * np.sin(2 * np.pi * 0.5 * t)
+            bass_phase = np.cumsum(bass_freq_env * 2 * np.pi / sample_rate)
+            bass = 0.5 * np.sin(bass_phase)
+
+            # Melody (400-800 Hz with vibrato)
+            melody_base = 400 + 200 * np.sin(2 * np.pi * 0.3 * t)
+            melody_phase = 2 * np.pi * np.cumsum(melody_base) / sample_rate
+            melody_vibrato = 20 * np.sin(2 * np.pi * 5 * t)
+            melody = 0.4 * np.sin(melody_phase + 0.3 * melody_vibrato)
+
+            # Atmospheric pad (low harmonics, 150-300 Hz)
+            pad = (0.25 * np.sin(2 * np.pi * 150 * t) +
+                   0.15 * np.sin(2 * np.pi * 250 * t))
+
+            # Mix all layers (weighted for better balance)
+            audio = kick + 0.6 * bass + 0.5 * melody + 0.4 * pad + snare + 0.4 * hi_hat
+
+            # Pre-normalize: scale to increase RMS loudness
+            audio = 2.0 * audio
+
+            # Fade in/out
+            fade_len = int(0.2 * sample_rate)
+            fade_in = np.linspace(0, 1, fade_len)
+            fade_out = np.linspace(1, 0, fade_len)
+            audio[:fade_len] *= fade_in
+            audio[-fade_len:] *= fade_out
+
+            # Final normalization to prevent clipping
             max_val = np.max(np.abs(audio))
             if max_val > 0:
-                audio = 0.9 * audio / max_val
+                audio = audio / max_val * 0.9
 
-            # Save to bytes
             output = BytesIO()
             sf.write(output, audio, sample_rate, format='WAV')
             return output.getvalue()
