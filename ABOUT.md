@@ -179,8 +179,8 @@ python -m src train
 
 ```bash
 # 1. Clone and setup
-git clone https://github.com/Jakub-Syrek/MusicStyleTransfer.git
-cd MusicStyleTransfer
+git clone https://github.com/Jakub-Syrek/MusicStyleAnalysisML.git
+cd MusicStyleAnalysisML
 python -m venv venv
 
 # Windows
@@ -233,7 +233,7 @@ python -m src analyze file.wav --verbose
 ## Project Structure
 
 ```
-MusicStyleTransfer/
+MusicStyleAnalysisML/
 ├── src/
 │   ├── __main__.py              # CLI: analyze, train commands
 │   ├── style_analyzer.py        # Audio feature extraction (librosa)
@@ -248,7 +248,7 @@ MusicStyleTransfer/
 │   ├── README.md                # Quick start guide
 │   └── TECHNICAL_OVERVIEW.md    # Deep dive into implementation
 ├── requirements.txt             # Dependencies
-├── CLAUDE.md                    # Development directives
+├── .gitignore                   # Git ignore patterns
 ├── sample.wav                   # Test audio for quick demo
 ├── training_data.csv            # Feedback data (auto-generated)
 └── genre_model.pkl              # Trained ML model (auto-generated)
@@ -485,14 +485,13 @@ Jakub Syrek - 2026
 
 ## Contact & Support
 
-- 🐛 **Issues**: Report bugs on [GitHub Issues](https://github.com/Jakub-Syrek/MusicStyleTransfer/issues)
-- 💬 **Questions**: Start a [GitHub Discussion](https://github.com/Jakub-Syrek/MusicStyleTransfer/discussions)
+- 🐛 **Issues**: Report bugs on [GitHub Issues](https://github.com/Jakub-Syrek/MusicStyleAnalysisML/issues)
+- 💬 **Questions**: Start a [GitHub Discussion](https://github.com/Jakub-Syrek/MusicStyleAnalysisML/discussions)
 
 ## Documentation
 
 - 📖 [README.md](README.md) - Quick start and basic usage
 - 📚 [ABOUT.md](ABOUT.md) - This file - architecture and concepts
-- 🛠️ [CLAUDE.md](CLAUDE.md) - Development standards and guidelines
 
 ## Mathematics & Scientific References
 
