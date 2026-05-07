@@ -42,6 +42,22 @@ def create_parser() -> argparse.ArgumentParser:
     action="store_true",
     help="Show detailed genre matching scores for all genres"
   )
+  analyze_parser.add_argument(
+    "--correct",
+    type=str,
+    help="Correct genre label for training (saves feedback)"
+  )
+
+  # Train command
+  train_parser = subparsers.add_parser(
+    "train",
+    help="Train ML model on collected feedback"
+  )
+  train_parser.add_argument(
+    "--data",
+    default="training_data.csv",
+    help="Path to training data CSV (default: training_data.csv)"
+  )
 
   # Generate command
   generate_parser = subparsers.add_parser(
@@ -72,7 +88,38 @@ def create_parser() -> argparse.ArgumentParser:
   return parser
 
 
-def analyze_command(audio_path: str, verbose: bool = False) -> None:
+def train_command(data_file: str) -> None:
+  """Execute train command.
+
+  Args:
+    data_file: Path to training data CSV
+  """
+  try:
+    from src.ml_trainer import MLTrainer
+
+    trainer = MLTrainer(data_file)
+    size = trainer.get_training_size()
+
+    if size < 3:
+      print(f"[WARNING] Need at least 3 samples, have {size}")
+      print("[INFO] Use: python -m src analyze file.wav --correct genre")
+      return
+
+    print(f"[TRAINING] Training model on {size} samples...")
+    if trainer.train():
+      print("[OK] Model trained and saved to genre_model.pkl")
+      print(f"[INFO] Use: python -m src analyze file.wav")
+    else:
+      print("[ERROR] Training failed")
+      sys.exit(1)
+
+  except Exception as error:
+    print(f"[ERROR] {str(error)}", file=sys.stderr)
+    sys.exit(1)
+
+
+def analyze_command(audio_path: str, verbose: bool = False,
+                   correct: str = None) -> None:
   """Execute analyze command.
 
   Args:
@@ -88,9 +135,18 @@ def analyze_command(audio_path: str, verbose: bool = False) -> None:
     # Load audio for rhythm analysis
     y, sr = lr.load(audio_path, sr=16000)
 
-    # Genre detection (top 5)
+    # ML model prediction (if available)
+    from src.ml_trainer import MLTrainer
+    ml_trainer = MLTrainer()
+    ml_prediction = ml_trainer.predict(features)
+
+    # Genre detection (top 5) + ML if available
     genre_detector = GenreDetector()
-    top5_genres = genre_detector.classify_top5(features)
+    if ml_prediction and not correct:
+      ml_genre, ml_conf = ml_prediction
+      top5_genres = [(ml_genre, ml_conf)]
+    else:
+      top5_genres = genre_detector.classify_top5(features)
 
     # Rhythm analysis
     rhythm_analyzer = RhythmAnalyzer(sr)
@@ -127,6 +183,12 @@ def analyze_command(audio_path: str, verbose: bool = False) -> None:
         strength = "[" + "=" * strength_blocks + "-" * (10 - strength_blocks) + "]"
         print(f"{idx:2d}. {desc:28s} {confidence:6.1%} {strength} {family_display}")
       print("=" * 60)
+
+    # Save correction if provided
+    if correct:
+      ml_trainer.save_correction(features, correct.lower())
+      print(f"\n[OK] Correction saved: {correct}")
+      print("[INFO] Run: python -m src train  (to retrain model)")
 
     print("\n[RHYTHM] Beat & Rhythm Analysis")
     print("=" * 50)
@@ -186,7 +248,10 @@ def main() -> None:
     sys.exit(0)
 
   if args.command == "analyze":
-    analyze_command(args.audio, verbose=args.verbose)
+    correct = getattr(args, 'correct', None)
+    analyze_command(args.audio, verbose=args.verbose, correct=correct)
+  elif args.command == "train":
+    train_command(args.data)
   elif args.command == "generate":
     generate_command(
       args.reference,
