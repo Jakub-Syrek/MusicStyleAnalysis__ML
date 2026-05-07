@@ -71,7 +71,7 @@ GENRE_DATABASE = {
     },
     "breakcore": {
         "tempo_range": (160, 200),
-        "loudness_range": (0.2, 0.7),
+        "loudness_range": (0.2, 0.75),
         "spectral_centroid_range": (1500, 4000),
         "zcr_range": (0.08, 0.18),
         "description": "Breakcore/Jungle",
@@ -119,9 +119,9 @@ GENRE_DATABASE = {
     },
     "drum_bass": {
         "tempo_range": (160, 180),
-        "loudness_range": (0.3, 0.65),
-        "spectral_centroid_range": (1500, 4000),
-        "zcr_range": (0.08, 0.16),
+        "loudness_range": (0.35, 0.65),
+        "spectral_centroid_range": (2000, 4000),
+        "zcr_range": (0.08, 0.14),
         "description": "Drum & Bass",
         "family": "breakbeat",
     },

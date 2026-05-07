@@ -81,12 +81,37 @@ class MLTrainer:
       self.label_encoder = LabelEncoder()
       y = self.label_encoder.fit_transform(labels)
 
+      unique_genres = np.unique(labels)
+
+      print("\n[ML TRAINING] Adaptive Genre Classification Model")
+      print("=" * 60)
+      print(f"Training Samples: {len(data)}")
+      print(f"Unique Genres: {len(unique_genres)} ({', '.join(sorted(unique_genres))})")
+      print(f"\nFeature Space: 4-dimensional")
+      print(f"  • Tempo (BPM)")
+      print(f"  • Loudness (RMS)")
+      print(f"  • Spectral Centroid (Hz)")
+      print(f"  • Zero Crossing Rate")
+      print(f"\nAlgorithm: Random Forest Classification")
+      print(f"  • Trees: 50")
+      print(f"  • Max Depth: 10")
+      print(f"  • Strategy: Ensemble learning with voting")
+      print(f"\nMath Behind:")
+      print(f"  • Each tree: CART (Classification and Regression Trees)")
+      print(f"  • Split criterion: Gini impurity")
+      print(f"  • Prediction: Majority vote across 50 trees")
+      print(f"  • Confidence: Mean probability from trees")
+
       self.model = RandomForestClassifier(
         n_estimators=50,
         max_depth=10,
         random_state=42
       )
       self.model.fit(X, y)
+
+      print(f"\n[OK] Model trained and saved to {self.model_file}")
+      print("=" * 60 + "\n")
+
       self._save_model()
       return True
 

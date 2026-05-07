@@ -102,8 +102,8 @@ class GenreDetector:
       for name, genres in families_dict.items()
     }
 
-  def classify_top5(self, features: Dict[str, Any]) -> List[Tuple[str, float]]:
-    """Classify genre and return top 5 matches.
+  def classify_top10(self, features: Dict[str, Any]) -> List[Tuple[str, float]]:
+    """Classify genre and return top 10 matches.
 
     Args:
       features: Audio features from StyleAnalyzer
@@ -130,10 +130,10 @@ class GenreDetector:
       reverse=True
     )
 
-    top5 = sorted_genres[:5]
+    top10 = sorted_genres[:10]
     return [
       (name, min(score / 1.0, 1.0))
-      for name, score in top5
+      for name, score in top10
     ]
 
   def classify_all(self, features: Dict[str, Any]) -> List[Tuple[str, float]]:

@@ -140,13 +140,13 @@ def analyze_command(audio_path: str, verbose: bool = False,
     ml_trainer = MLTrainer()
     ml_prediction = ml_trainer.predict(features)
 
-    # Genre detection (top 5) + ML if available
+    # Genre detection (top 10) + ML if available
     genre_detector = GenreDetector()
     if ml_prediction and not correct:
       ml_genre, ml_conf = ml_prediction
-      top5_genres = [(ml_genre, ml_conf)]
+      top10_genres = [(ml_genre, ml_conf)]
     else:
-      top5_genres = genre_detector.classify_top5(features)
+      top10_genres = genre_detector.classify_top10(features)
 
     # Rhythm analysis
     rhythm_analyzer = RhythmAnalyzer(sr)
@@ -161,9 +161,9 @@ def analyze_command(audio_path: str, verbose: bool = False,
     print(f"MFCC (13 coefficients): {[f'{m:.2f}' for m in features['mfcc']]}")
     print("=" * 50)
 
-    print("\n[GENRE] Top 5 Genre Classification")
+    print("\n[GENRE] Top 10 Genre Classification")
     print("=" * 50)
-    for idx, (genre, confidence) in enumerate(top5_genres, 1):
+    for idx, (genre, confidence) in enumerate(top10_genres, 1):
       from src.genre_database import GENRE_DATABASE
       desc = genre_detector.get_genre_description(genre)
       family = GENRE_DATABASE.get(genre, {}).get("family", "unknown")

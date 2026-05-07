@@ -6,8 +6,9 @@ Analyze musical style from audio files and classify music genre based on compreh
 
 - Extract musical features (tempo, loudness, spectral centroid, zero crossing rate, MFCC)
 - Classify music into **40+ electronic and mainstream genres** (House, Techno, Trance, Drum & Bass, Breakcore, Ambient, Industrial, etc.)
-- Return **top 5 genre matches** with confidence scores (probability rankings)
+- Return **top 10 genre matches** with confidence scores and genre families
 - Analyze rhythm and beat patterns (beat regularity, syncopation, structural breaks)
+- **Adaptive ML model** that learns from user feedback and improves predictions
 - Support for multiple audio formats (WAV, MP3, FLAC)
 
 ## Quick Start
@@ -48,13 +49,18 @@ Zero Crossing Rate: 0.0954
 MFCC (13 coefficients): ['-29.71', '59.95', '25.88', ...]
 ==================================================
 
-[GENRE] Top 5 Genre Classification
+[GENRE] Top 10 Genre Classification
 ==================================================
-1. Drum & Bass                     50.2%
-2. Ambient Breakbeat               49.3%
-3. Downbeat/Downtempo              46.7%
-4. Jungle                          44.5%
-5. IDM                             44.3%
+1. Drum & Bass                     50.2%  (Breakbeat)
+2. Jungle                          49.3%  (Breakbeat)
+3. Breakcore/Jungle                48.5%  (Breakbeat)
+4. Ambient Breakbeat               46.7%  (Breakbeat)
+5. Breakbeat                       46.3%  (Breakbeat)
+6. Downtempo                       44.5%  (Ambient)
+7. IDM                             44.3%  (Electronic)
+8. Drum & Bass                     42.1%  (Breakbeat)
+9. Ambient House                   40.8%  (House)
+10. Progressive House              40.2%  (House)
 ==================================================
 
 [RHYTHM] Beat & Rhythm Analysis
@@ -65,6 +71,23 @@ Strong Rhythm: Yes
 Detected Breaks: 253 (silent sections)
 ==================================================
 ```
+
+#### Correct Genre & Train ML Model
+
+Provide feedback to improve predictions:
+
+```bash
+# Analyze and correct genre
+python -m src analyze sample.wav --correct breakcore
+
+# Train model on collected feedback (requires 3+ samples)
+python -m src train
+
+# Show detailed analysis of all genres
+python -m src analyze sample.wav --verbose
+```
+
+The ML model uses **Random Forest Classification** trained on collected corrections. Each correction is saved to `training_data.csv` and integrated into predictions after retraining.
 
 #### Run Tests
 ```bash
@@ -77,15 +100,17 @@ pytest tests/test_genre_detector.py -v
 
 - [x] Audio feature extraction (tempo, loudness, spectral features, MFCC)
 - [x] Rhythm analysis (beat tracking, break detection, syncopation)
-- [x] Comprehensive genre classification (40+ genres with top 5 ranking)
+- [x] Comprehensive genre classification (40+ genres with top 10 ranking)
 - [x] GenreFamily architecture for organized subgenres
 - [x] Multi-dimensional feature matching (tempo, loudness, spectral, ZCR)
 - [x] Confidence scoring and probability ranking
-- [x] CLI interface (analyze command with top 5 output)
-- [x] Comprehensive test coverage
+- [x] CLI interface (analyze command with top 10 output)
+- [x] Adaptive ML model with feedback training (Random Forest, sklearn)
+- [x] User feedback system and model retraining
+- [x] Verbose mode with visual strength indicators
 - [ ] Spectral features (chroma, rolloff, flatness)
-- [ ] Machine learning classifier with training capability
 - [ ] Web UI for visualization
+- [ ] Real-time analysis streaming
 
 ## Architecture
 
