@@ -455,8 +455,6 @@ python -m src analyze sample.wav --verbose
 # 4. Commit (without co-author lines)
 git add .
 git commit -m "Feature: clear description of what changed"
-
-# 5. Follow CLAUDE.md development directives
 ```
 
 ### Key Development Guidelines

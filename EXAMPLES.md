@@ -91,7 +91,7 @@ pytest tests/ --cov=src
 
 ### Code Standards
 
-Follow CLAUDE.md directives:
+Professional development standards:
 - ✓ English only (code, comments, commits)
 - ✓ JSDoc for all public functions
 - ✓ SOLID principles (max 30 lines per function)
