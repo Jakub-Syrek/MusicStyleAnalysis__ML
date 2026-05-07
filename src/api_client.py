@@ -1,14 +1,24 @@
 """
 Handle API calls to music generation services.
+
+Supports:
+- Local transformers (MusicGen via transformers library)
+- Hugging Face HTTP API (when available)
+- Fallback synthetic generation
 """
 
 import os
-import requests
+import warnings
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
+try:
+  import requests
+except ImportError:
+  requests = None
 
 load_dotenv()
+warnings.filterwarnings("ignore")
 
 
 class MusicGenerationClient:
@@ -39,15 +49,74 @@ class MusicGenerationClient:
         """
         Generate music based on prompt.
 
+        Tries: Local transformers → HTTP API → Fallback synthesis
+
         @param {string} prompt - Text description of desired music
         @param {number} duration - Duration in seconds
         @param {object} options - Additional generation parameters
         @returns {bytes} Generated audio data
         """
         if self.provider == "huggingface":
-            return self._generate_huggingface(prompt, duration, **options)
+            # Try local model first
+            try:
+                return self._generate_local_musicgen(prompt, duration, **options)
+            except Exception as e:
+                print(f"[INFO] Local model unavailable: {str(e)[:50]}")
+                # Fallback to HTTP API
+                try:
+                    return self._generate_huggingface(prompt, duration, **options)
+                except Exception:
+                    # Final fallback: synthetic generation
+                    return self._generate_fallback(prompt, duration)
 
         raise NotImplementedError(f"Provider {self.provider} not implemented")
+
+    def _generate_local_musicgen(
+        self,
+        prompt: str,
+        duration: int,
+        model_name: str = "facebook/musicgen-small",
+        **options: Any
+    ) -> bytes:
+        """
+        Generate music using local MusicGen model (transformers).
+
+        Downloads and caches model locally on first use.
+
+        @param {string} prompt - Generation prompt
+        @param {number} duration - Duration in seconds
+        @param {string} model_name - HF model identifier
+        @param {object} options - Additional parameters
+        @returns {bytes} Audio data (WAV format)
+        """
+        try:
+            from transformers import AutoProcessor, MusicgenForConditionalGeneration
+            import soundfile as sf
+            from io import BytesIO
+
+            print(f"[INFO] Loading {model_name}...")
+
+            processor = AutoProcessor.from_pretrained(model_name)
+            model = MusicgenForConditionalGeneration.from_pretrained(model_name)
+
+            # Process input
+            inputs = processor(text=[prompt], padding=True, return_tensors="pt")
+
+            # Generate
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                outputs = model.generate(**inputs, max_length=duration * 50)
+
+            # Convert to audio
+            audio_values = outputs[0, 0].cpu().numpy()
+
+            # Save to bytes
+            output = BytesIO()
+            sf.write(output, audio_values, model.config.sample_rate, format='WAV')
+            return output.getvalue()
+
+        except Exception as error:
+            raise RuntimeError(f"Local MusicGen failed: {str(error)}")
 
     def _generate_huggingface(
         self,
@@ -57,15 +126,45 @@ class MusicGenerationClient:
         **options: Any
     ) -> bytes:
         """
-        Generate music using Hugging Face API or local generation.
-
-        For production: Use local transformers or Gradio endpoints.
-        This demo generates synthetic audio based on style features.
+        Generate music using Hugging Face HTTP API.
 
         @param {string} prompt - Generation prompt
         @param {number} duration - Duration in seconds
         @param {string} model - Model identifier
         @param {object} options - Additional parameters
+        @returns {bytes} Audio data (WAV format)
+        """
+        if not requests:
+            raise RuntimeError("requests library required for HTTP API")
+
+        try:
+            api_url = f"https://api-inference.huggingface.co/models/{model}"
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            payload = {"inputs": prompt}
+
+            response = requests.post(
+                api_url,
+                headers=headers,
+                json=payload,
+                timeout=180
+            )
+
+            response.raise_for_status()
+            return response.content
+
+        except Exception as error:
+            raise RuntimeError(f"API request failed: {str(error)}")
+
+    def _generate_fallback(
+        self,
+        prompt: str,
+        duration: int
+    ) -> bytes:
+        """
+        Fallback: Generate synthetic audio based on style analysis.
+
+        @param {string} prompt - Generation prompt
+        @param {number} duration - Duration in seconds
         @returns {bytes} Audio data (WAV format)
         """
         try:
@@ -98,7 +197,7 @@ class MusicGenerationClient:
             return output.getvalue()
 
         except Exception as error:
-            raise RuntimeError(f"Audio generation failed: {str(error)}")
+            raise RuntimeError(f"Fallback generation failed: {str(error)}")
 
     def _extract_tempo_from_prompt(self, prompt: str) -> float:
         """
