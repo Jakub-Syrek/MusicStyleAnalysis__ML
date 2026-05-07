@@ -152,22 +152,20 @@ def analyze_command(audio_path: str, verbose: bool = False,
     else:
       top_genres = genre_detector.classify_top5(features)
 
-    # Rhythm analysis
-    rhythm_analyzer = RhythmAnalyzer(sr)
-    rhythm = rhythm_analyzer.analyze_rhythm(y, sr)
+    from src.genre_database import GENRE_DATABASE
 
-    print("\n[ANALYSIS] Musical Style Analysis")
-    print("=" * 50)
-    print(f"Tempo: {features['tempo']:.1f} BPM")
-    print(f"Loudness: {features['loudness']:.3f}")
-    print(f"Spectral Centroid: {features['spectral_centroid']:.1f} Hz")
-    print(f"Zero Crossing Rate: {features['zero_crossing_rate']:.4f}")
-    print(f"MFCC (13 coefficients): {[f'{m:.2f}' for m in features['mfcc']]}")
-    print("=" * 50)
+    if not correct:
+      print("\n[ANALYSIS] Musical Style Analysis")
+      print("=" * 50)
+      print(f"Tempo: {features['tempo']:.1f} BPM")
+      print(f"Loudness: {features['loudness']:.3f}")
+      print(f"Spectral Centroid: {features['spectral_centroid']:.1f} Hz")
+      print(f"Zero Crossing Rate: {features['zero_crossing_rate']:.4f}")
+      print(f"MFCC (13 coefficients): {[f'{m:.2f}' for m in features['mfcc']]}")
+      print("=" * 50)
 
     print("\n[GENRE] Top 5 Genre Classification")
     print("=" * 50)
-    from src.genre_database import GENRE_DATABASE
     for idx, (genre, confidence) in enumerate(top_genres, 1):
       desc = genre_detector.get_genre_description(genre)
       family = GENRE_DATABASE.get(genre, {}).get("family", "unknown")
@@ -175,7 +173,7 @@ def analyze_command(audio_path: str, verbose: bool = False,
       print(f"{idx}. {desc:28s} {confidence:6.1%}  {family_display}")
     print("=" * 50)
 
-    if verbose:
+    if verbose and not correct:
       print("\n[DETAILED] All Genres with Confidence Scores")
       print("=" * 60)
       all_genres = genre_detector.classify_all(features)
@@ -188,11 +186,14 @@ def analyze_command(audio_path: str, verbose: bool = False,
         print(f"{idx:2d}. {desc:28s} {confidence:6.1%} {strength} {family_display}")
       print("=" * 60)
 
-    # Save correction if provided
     if correct:
       ml_trainer.save_correction(features, correct.lower())
       print(f"\n[OK] Correction saved: {correct}")
       print("[INFO] Run: python -m src train  (to retrain model)")
+      return
+
+    rhythm_analyzer = RhythmAnalyzer(sr)
+    rhythm = rhythm_analyzer.analyze_rhythm(y, sr)
 
     print("\n[RHYTHM] Beat & Rhythm Analysis")
     print("=" * 50)
