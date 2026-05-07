@@ -66,3 +66,7 @@ logs/
 *.tmp
 .tmp/
 CLAUDE.md
+
+# Auto-generated ML models and training data
+genre_model.pkl
+training_data.csv
