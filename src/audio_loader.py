@@ -8,6 +8,7 @@ Supports:
 """
 
 import os
+import glob
 import tempfile
 import shutil
 from pathlib import Path
@@ -79,30 +80,86 @@ class AudioLoader:
                 "yt-dlp not installed. Run: pip install yt-dlp"
             )
 
-        temp_file = os.path.join(self.temp_dir, "youtube_audio.wav")
-        self.cleanup_paths.append(temp_file)
+        temp_base = os.path.join(self.temp_dir, "youtube_audio")
 
         try:
+            has_ffmpeg = self._check_ffmpeg()
+
             ydl_opts = {
                 'format': 'bestaudio/best',
-                'postprocessors': [{
+                'outtmpl': temp_base,
+                'quiet': True,
+                'no_warnings': True,
+            }
+
+            if has_ffmpeg:
+                ydl_opts['postprocessors'] = [{
                     'key': 'FFmpegExtractAudio',
                     'preferredcodec': 'wav',
                     'preferredquality': '192',
-                }],
-                'outtmpl': temp_file.replace('.wav', ''),
-                'quiet': False,
-                'no_warnings': False,
-            }
+                }]
 
             print(f"[DOWNLOAD] YouTube: {url}")
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
+                ydl.extract_info(url, download=True)
 
-            return self._load_file(temp_file, sr)
+            temp_file = None
+            for ext in ['wav', 'webm', 'm4a', 'mp4', 'mkv', '']:
+                candidate = f"{temp_base}.{ext}" if ext else temp_base
+                if os.path.exists(candidate):
+                    temp_file = candidate
+                    break
+
+            if not temp_file:
+                candidates = glob.glob(f"{temp_base}*")
+                if candidates:
+                    temp_file = sorted(candidates)[-1]
+
+            if not temp_file or not os.path.exists(temp_file):
+                error_msg = (
+                    "Failed to locate downloaded audio file. "
+                    "YouTube support requires FFmpeg for audio conversion.\n\n"
+                    "Install FFmpeg:\n"
+                    "  Windows: choco install ffmpeg\n"
+                    "  macOS:   brew install ffmpeg\n"
+                    "  Linux:   sudo apt-get install ffmpeg\n"
+                    "  Or download from: https://ffmpeg.org/download.html"
+                )
+                raise ValueError(error_msg)
+
+            self.cleanup_paths.append(temp_file)
+            try:
+                return self._load_file(temp_file, sr)
+            except ValueError as e:
+                if "Failed to load" in str(e) and not has_ffmpeg:
+                    error_msg = (
+                        f"Cannot load downloaded audio format. "
+                        f"YouTube support requires FFmpeg for audio conversion.\n\n"
+                        f"Install FFmpeg:\n"
+                        f"  Windows: choco install ffmpeg\n"
+                        f"  macOS:   brew install ffmpeg\n"
+                        f"  Linux:   sudo apt-get install ffmpeg\n"
+                        f"  Or download from: https://ffmpeg.org/download.html"
+                    )
+                    raise ValueError(error_msg)
+                raise
 
         except Exception as e:
             raise ValueError(f"Failed to load YouTube: {str(e)}")
+
+    def _check_ffmpeg(self) -> bool:
+        """Check if FFmpeg is available on the system."""
+        import subprocess
+        try:
+            subprocess.run(
+                ['ffmpeg', '-version'],
+                capture_output=True,
+                timeout=2,
+                check=False
+            )
+            return True
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return False
 
     def _load_direct_url(self, url: str, sr: int) -> Tuple[np.ndarray, int]:
         """Download and load audio from direct HTTP URL."""
