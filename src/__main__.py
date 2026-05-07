@@ -82,10 +82,9 @@ def analyze_command(audio_path: str) -> None:
     # Load audio for rhythm analysis
     y, sr = lr.load(audio_path, sr=16000)
 
-    # Genre detection
+    # Genre detection (top 5)
     genre_detector = GenreDetector()
-    genre, confidence = genre_detector.classify(features)
-    genre_desc = genre_detector.get_genre_description(genre)
+    top5_genres = genre_detector.classify_top5(features)
 
     # Rhythm analysis
     rhythm_analyzer = RhythmAnalyzer(sr)
@@ -100,10 +99,11 @@ def analyze_command(audio_path: str) -> None:
     print(f"MFCC (13 coefficients): {[f'{m:.2f}' for m in features['mfcc']]}")
     print("=" * 50)
 
-    print("\n[GENRE] Classification")
+    print("\n[GENRE] Top 5 Genre Classification")
     print("=" * 50)
-    print(f"Genre: {genre_desc}")
-    print(f"Confidence: {confidence:.1%}")
+    for idx, (genre, confidence) in enumerate(top5_genres, 1):
+      desc = genre_detector.get_genre_description(genre)
+      print(f"{idx}. {desc:30s} {confidence:6.1%}")
     print("=" * 50)
 
     print("\n[RHYTHM] Beat & Rhythm Analysis")

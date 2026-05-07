@@ -5,7 +5,8 @@ Analyze musical style from audio files and classify music genre based on compreh
 ## Features
 
 - Extract musical features (tempo, loudness, spectral centroid, zero crossing rate, MFCC)
-- Classify music into 10 genres: Classical, Ambient, Jazz, Blues, Rock, Pop, Hip-Hop, Electronic, Dance, Breakcore
+- Classify music into **40+ electronic and mainstream genres** (House, Techno, Trance, Drum & Bass, Breakcore, Ambient, Industrial, etc.)
+- Return **top 5 genre matches** with confidence scores (probability rankings)
 - Analyze rhythm and beat patterns (beat regularity, syncopation, structural breaks)
 - Support for multiple audio formats (WAV, MP3, FLAC)
 
@@ -47,10 +48,13 @@ Zero Crossing Rate: 0.0954
 MFCC (13 coefficients): ['-29.71', '59.95', '25.88', ...]
 ==================================================
 
-[GENRE] Classification
+[GENRE] Top 5 Genre Classification
 ==================================================
-Genre: Electronic/Synth
-Confidence: 78.5%
+1. Drum & Bass                     50.2%
+2. Ambient Breakbeat               49.3%
+3. Downbeat/Downtempo              46.7%
+4. Jungle                          44.5%
+5. IDM                             44.3%
 ==================================================
 
 [RHYTHM] Beat & Rhythm Analysis
@@ -58,7 +62,7 @@ Confidence: 78.5%
 Beat Regularity: 97.9% (how steady)
 Onset Density: 0.134 (syncopation)
 Strong Rhythm: Yes
-Detected Breaks: 5 (silent sections)
+Detected Breaks: 253 (silent sections)
 ==================================================
 ```
 
@@ -72,13 +76,16 @@ pytest tests/test_genre_detector.py -v
 ## Project Status
 
 - [x] Audio feature extraction (tempo, loudness, spectral features, MFCC)
-- [x] Basic rhythm analysis (beat tracking, break detection)
-- [x] Improved genre classification (10 genres with multi-feature matching)
-- [x] CLI interface (analyze command)
+- [x] Rhythm analysis (beat tracking, break detection, syncopation)
+- [x] Comprehensive genre classification (40+ genres with top 5 ranking)
+- [x] GenreFamily architecture for organized subgenres
+- [x] Multi-dimensional feature matching (tempo, loudness, spectral, ZCR)
+- [x] Confidence scoring and probability ranking
+- [x] CLI interface (analyze command with top 5 output)
 - [x] Comprehensive test coverage
 - [ ] Spectral features (chroma, rolloff, flatness)
-- [ ] Support for more genres (Techno, House, Drum & Bass, etc.)
-- [ ] Machine learning genre classifier (optional future enhancement)
+- [ ] Machine learning classifier with training capability
+- [ ] Web UI for visualization
 
 ## Architecture
 
@@ -105,18 +112,38 @@ Analyzes beat and rhythm characteristics:
 - Break/silence detection
 - Rhythm strength estimation
 
-## Supported Genres
+## Supported Genres (40+)
 
-1. **Classical/Orchestral** - Tempo: 60-120 BPM, orchestral textures
-2. **Ambient/Atmospheric** - Tempo: 40-90 BPM, subtle, peaceful
-3. **Jazz** - Tempo: 70-130 BPM, syncopated rhythms
-4. **Blues** - Tempo: 60-110 BPM, soulful character
-5. **Rock** - Tempo: 90-150 BPM, high energy
-6. **Pop** - Tempo: 85-135 BPM, radio-friendly
-7. **Hip-Hop/Rap** - Tempo: 80-120 BPM, rhythmic focus
-8. **Electronic/Synth** - Tempo: 100-160 BPM, synthetic sounds
-9. **Dance/EDM** - Tempo: 115-150 BPM, energetic, regular beats
-10. **Breakcore/Jungle** - Tempo: 160-200+ BPM, chaotic syncopation, fast breaks
+**Electronic Base Genres:**
+- Acid (130 BPM)
+- Ambient (40-90 BPM)
+- Breakbeat (140-180 BPM)
+- Breakcore/Jungle (160-200 BPM)
+- Club (124-130 BPM)
+- Dance/EDM (115-150 BPM)
+- Dub (80-110 BPM)
+- Dubstep (135-150 BPM)
+- Electro (110-140 BPM)
+- Electronic (100-160 BPM)
+- House (115-135 BPM)
+- Minimal Techno (120-140 BPM)
+- Techno (120-150 BPM)
+- Trance (130-150 BPM)
+- Trip Hop (85-120 BPM)
+
+**House Subgenres:**
+- Acid House, Ambient House, Deep House, Future House, Tech House, Progressive House
+
+**Trance Subgenres:**
+- Goa Trance, Dark Trance, Hard Trance, Psytrance, Progressive Trance, Minimal Trance
+
+**Breakbeat Subgenres:**
+- Drum & Bass (160-180 BPM)
+- Jungle (155-180 BPM)
+- Hardcore, Happy Hardcore, Gabber (160-200 BPM)
+
+**Other Styles:**
+- Industrial, IDM, Downtempo, Isolationism, Detroit, Dub, Trip Hop, Techstep
 
 ## Development
 
