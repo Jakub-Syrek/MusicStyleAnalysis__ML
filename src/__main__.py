@@ -102,8 +102,11 @@ def analyze_command(audio_path: str) -> None:
     print("\n[GENRE] Top 5 Genre Classification")
     print("=" * 50)
     for idx, (genre, confidence) in enumerate(top5_genres, 1):
+      from src.genre_database import GENRE_DATABASE
       desc = genre_detector.get_genre_description(genre)
-      print(f"{idx}. {desc:30s} {confidence:6.1%}")
+      family = GENRE_DATABASE.get(genre, {}).get("family", "unknown")
+      family_display = f"({family.title()})"
+      print(f"{idx}. {desc:28s} {confidence:6.1%}  {family_display}")
     print("=" * 50)
 
     print("\n[RHYTHM] Beat & Rhythm Analysis")
