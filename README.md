@@ -6,7 +6,7 @@ Analyze musical style from audio files and classify music genre based on compreh
 
 - Extract musical features (tempo, loudness, spectral centroid, zero crossing rate, MFCC)
 - Classify music into **40+ electronic and mainstream genres** (House, Techno, Trance, Drum & Bass, Breakcore, Ambient, Industrial, etc.)
-- Return **top 10 genre matches** with confidence scores and genre families
+- Return **top 5 genre matches** with confidence scores and genre families
 - Analyze rhythm and beat patterns (beat regularity, syncopation, structural breaks)
 - **Adaptive ML model** that learns from user feedback and improves predictions
 - Support for multiple audio sources:
@@ -61,18 +61,13 @@ Zero Crossing Rate: 0.0954
 MFCC (13 coefficients): ['-29.71', '59.95', '25.88', ...]
 ==================================================
 
-[GENRE] Top 10 Genre Classification
+[GENRE] Top 5 Genre Classification
 ==================================================
 1. Drum & Bass                     50.2%  (Breakbeat)
 2. Jungle                          49.3%  (Breakbeat)
 3. Breakcore/Jungle                48.5%  (Breakbeat)
 4. Ambient Breakbeat               46.7%  (Breakbeat)
 5. Breakbeat                       46.3%  (Breakbeat)
-6. Downtempo                       44.5%  (Ambient)
-7. IDM                             44.3%  (Electronic)
-8. Drum & Bass                     42.1%  (Breakbeat)
-9. Ambient House                   40.8%  (House)
-10. Progressive House              40.2%  (House)
 ==================================================
 
 [RHYTHM] Beat & Rhythm Analysis
@@ -112,11 +107,11 @@ pytest tests/test_genre_detector.py -v
 
 - [x] Audio feature extraction (tempo, loudness, spectral features, MFCC)
 - [x] Rhythm analysis (beat tracking, break detection, syncopation)
-- [x] Comprehensive genre classification (40+ genres with top 10 ranking)
+- [x] Comprehensive genre classification (40+ genres with top 5 ranking)
 - [x] GenreFamily architecture for organized subgenres
 - [x] Multi-dimensional feature matching (tempo, loudness, spectral, ZCR)
 - [x] Confidence scoring and probability ranking
-- [x] CLI interface (analyze command with top 10 output)
+- [x] CLI interface (analyze command with top 5 output)
 - [x] Adaptive ML model with feedback training (Random Forest, sklearn)
 - [x] User feedback system and model retraining
 - [x] Verbose mode with visual strength indicators
