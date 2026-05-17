@@ -1,41 +1,81 @@
-# Music Analysis & Genre Classification
+# MusicStyleAnalysis__ML
 
-Analyze musical style from audio files and classify music genre based on comprehensive audio features.
+Analyse musical style from audio and classify it into 45+ electronic genres with an adaptive Random Forest model.
+
+![CI](https://github.com/Jakub-Syrek/MusicStyleAnalysis__ML/actions/workflows/tests.yml/badge.svg)
+![Release](https://img.shields.io/github/v/release/Jakub-Syrek/MusicStyleAnalysis__ML)
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![License](https://img.shields.io/github/license/Jakub-Syrek/MusicStyleAnalysis__ML)
+![Last commit](https://img.shields.io/github/last-commit/Jakub-Syrek/MusicStyleAnalysis__ML)
+
+## Overview
+
+MusicStyleAnalysis__ML extracts musical features from any audio source
+(local file, HTTP URL or YouTube video), classifies the track against 45+
+electronic-music genre profiles, and learns from user corrections through an
+adaptive scikit-learn Random Forest classifier. It is a small, fast,
+dependency-light tool intended for DJs, producers, music librarians and MIR
+researchers.
 
 ## Features
 
-- Extract musical features (tempo, loudness, spectral centroid, zero crossing rate, MFCC)
-- Classify music into **40+ electronic and mainstream genres** (House, Techno, Trance, Drum & Bass, Breakcore, Ambient, Industrial, etc.)
-- Return **top 5 genre matches** with confidence scores and genre families
-- Analyze rhythm and beat patterns (beat regularity, syncopation, structural breaks)
-- **Adaptive ML model** that learns from user feedback and improves predictions
-- Support for multiple audio sources:
-  - Local audio files (WAV, MP3, FLAC, etc.)
-  - Direct HTTP/HTTPS URLs
-  - YouTube videos (automatic extraction)
+- 4-D audio feature extraction: tempo, loudness, spectral centroid,
+  zero-crossing rate, plus 13-coefficient MFCC.
+- 45+ genre profiles organised into families (house, techno, trance,
+  breakbeat, ambient, hardcore, rave, electronic, hip-hop, reggae,
+  industrial, dance, jazz).
+- Top-5 ranked genre classification with confidence scores and genre family
+  display.
+- Rhythm analysis: beat regularity, onset density, structural breaks,
+  strong-rhythm flag.
+- Adaptive ML model (`RandomForestClassifier`, 50 trees) that retrains from
+  user corrections saved to `training_data.csv`.
+- Multi-source audio loading: local files (WAV, MP3, FLAC, ...), direct
+  HTTP/HTTPS URLs and YouTube videos.
+- FFmpeg is bundled automatically via `static-ffmpeg` -- no system install
+  required.
 
-## Quick Start
+## Tech stack
 
-### Setup
+- **Audio**: [librosa](https://librosa.org/) 0.10 for feature extraction and
+  beat tracking, [soundfile](https://pysoundfile.readthedocs.io/) for I/O.
+- **ML**: [scikit-learn](https://scikit-learn.org/) (`RandomForestClassifier`,
+  `LabelEncoder`), [numpy](https://numpy.org/),
+  [scipy](https://scipy.org/), [joblib](https://joblib.readthedocs.io/).
+- **Loaders**: [yt-dlp](https://github.com/yt-dlp/yt-dlp) for YouTube,
+  [static-ffmpeg](https://pypi.org/project/static-ffmpeg/) for a bundled
+  FFmpeg binary, [requests](https://requests.readthedocs.io/) for HTTP.
+- **Misc**: [music21](https://web.mit.edu/music21/) (reserved for future
+  music-theory features), [python-dotenv](https://pypi.org/project/python-dotenv/)
+  for optional API keys.
+
+## Installation
 
 ```bash
 # Clone repository
-git clone https://github.com/Jakub-Syrek/MusicStyleAnalysisML.git
-cd MusicStyleAnalysisML
+git clone https://github.com/Jakub-Syrek/MusicStyleAnalysis__ML.git
+cd MusicStyleAnalysis__ML
 
 # Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Windows
+venv\Scripts\activate
+# macOS / Linux
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### Usage
+For development (tests + coverage):
 
-#### Analyze Musical Style
+```bash
+pip install -e ".[dev]"
+```
 
-Extract features and classify genre from audio sources:
+## Usage examples
+
+### Analyse audio
 
 ```bash
 # Local audio file
@@ -44,13 +84,12 @@ python -m src analyze sample.wav
 # Audio from HTTP URL
 python -m src analyze https://example.com/music/song.mp3
 
-# YouTube video (FFmpeg bundled via static-ffmpeg)
+# YouTube video (FFmpeg auto-downloaded on first use)
 python -m src analyze https://youtube.com/watch?v=dQw4w9WgXcQ
 ```
 
-FFmpeg is bundled automatically via `static-ffmpeg` (included in `requirements.txt`). No system install required—the binary is downloaded on first YouTube use and cached in the virtualenv.
+Sample output:
 
-Output:
 ```
 [ANALYSIS] Musical Style Analysis
 ==================================================
@@ -79,112 +118,99 @@ Detected Breaks: 253 (silent sections)
 ==================================================
 ```
 
-#### Correct Genre & Train ML Model
-
-Provide feedback to improve predictions:
+### Correct a genre and train
 
 ```bash
-# Analyze and correct genre
+# Save a correction for future training
 python -m src analyze sample.wav --correct breakcore
 
-# Train model on collected feedback (requires 3+ samples)
+# Retrain the model once you have 3+ samples
 python -m src train
 
-# Show detailed analysis of all genres
+# Show all genres with strength bars
 python -m src analyze sample.wav --verbose
 ```
 
-The ML model uses **Random Forest Classification** trained on collected corrections. Each correction is saved to `training_data.csv` and integrated into predictions after retraining.
+### Generate music (experimental)
 
-#### Run Tests
 ```bash
-pytest tests/
-pytest tests/test_style_analyzer.py -v
-pytest tests/test_genre_detector.py -v
+python -m src generate reference.wav --duration 30 --output generated.wav
 ```
 
-## Project Status
+The `generate` command tries local MusicGen, then the Hugging Face API
+(requires `HUGGINGFACE_API_KEY` in `.env`), then a synthetic-audio fallback.
 
-- [x] Audio feature extraction (tempo, loudness, spectral features, MFCC)
-- [x] Rhythm analysis (beat tracking, break detection, syncopation)
-- [x] Comprehensive genre classification (40+ genres with top 5 ranking)
-- [x] GenreFamily architecture for organized subgenres
-- [x] Multi-dimensional feature matching (tempo, loudness, spectral, ZCR)
-- [x] Confidence scoring and probability ranking
-- [x] CLI interface (analyze command with top 5 output)
-- [x] Adaptive ML model with feedback training (Random Forest, sklearn)
-- [x] User feedback system and model retraining
-- [x] Verbose mode with visual strength indicators
-- [x] Multi-source audio loading (local files, HTTP URLs, YouTube)
-- [ ] Spectral features (chroma, rolloff, flatness)
-- [ ] Web UI for visualization
-- [ ] Real-time analysis streaming
+## Project structure
 
-## Architecture
-
-### Style Analyzer
-Extracts key musical features:
-- Tempo and beat information (via librosa.beat.tempo)
-- Loudness (RMS)
-- Spectral characteristics (centroid, rolloff)
-- Zero crossing rate (noisiness indicator)
-- Mel-frequency cepstral coefficients (MFCC)
-
-### Genre Detector
-Classifies music into genres using multi-dimensional feature matching:
-- Tempo ranges and confidence scoring
-- Loudness characteristics for each genre
-- Spectral profile matching
-- Zero crossing rate patterns
-- Weighted scoring system (tempo 30%, spectral 30%, loudness 20%, ZCR 20%)
-
-### Rhythm Analyzer
-Analyzes beat and rhythm characteristics:
-- Beat tracking and regularity
-- Onset detection (syncopation)
-- Break/silence detection
-- Rhythm strength estimation
-
-## Supported Genres (40+)
-
-**Electronic Base Genres:**
-- Acid (130 BPM)
-- Ambient (40-90 BPM)
-- Breakbeat (140-180 BPM)
-- Breakcore/Jungle (160-200 BPM)
-- Club (124-130 BPM)
-- Dance/EDM (115-150 BPM)
-- Dub (80-110 BPM)
-- Dubstep (135-150 BPM)
-- Electro (110-140 BPM)
-- Electronic (100-160 BPM)
-- House (115-135 BPM)
-- Minimal Techno (120-140 BPM)
-- Techno (120-150 BPM)
-- Trance (130-150 BPM)
-- Trip Hop (85-120 BPM)
-
-**House Subgenres:**
-- Acid House, Ambient House, Deep House, Future House, Tech House, Progressive House
-
-**Trance Subgenres:**
-- Goa Trance, Dark Trance, Hard Trance, Psytrance, Progressive Trance, Minimal Trance
-
-**Breakbeat Subgenres:**
-- Drum & Bass (160-180 BPM)
-- Jungle (155-180 BPM)
-- Hardcore, Happy Hardcore, Gabber (160-200 BPM)
-
-**Other Styles:**
-- Industrial, IDM, Downtempo, Isolationism, Detroit, Dub, Trip Hop, Techstep
-
-## Development
-
-Run tests before committing:
-```bash
-pytest tests/
 ```
+MusicStyleAnalysis__ML/
+├── src/
+│   ├── __init__.py            # Package metadata (__version__)
+│   ├── __main__.py            # CLI entry: analyze / train / generate
+│   ├── audio_loader.py        # Local files, HTTP URLs, YouTube
+│   ├── style_analyzer.py      # librosa feature extraction
+│   ├── genre_database.py      # 45+ genre profiles + families
+│   ├── genre_detector.py      # GenreDetector + RhythmAnalyzer
+│   ├── ml_trainer.py          # Random Forest training + persistence
+│   ├── api_client.py          # MusicGen / HF API / synthetic fallback
+│   └── music_generator.py     # Generation orchestrator
+├── tests/
+│   ├── test_style_analyzer.py
+│   ├── test_genre_detector.py
+│   ├── test_genre_database.py
+│   ├── test_ml_trainer.py
+│   ├── test_audio_loader.py
+│   └── test_api_client.py
+├── .github/
+│   ├── workflows/             # CI and auto-version
+│   ├── ISSUE_TEMPLATE/
+│   └── PULL_REQUEST_TEMPLATE.md
+├── requirements.txt
+├── pyproject.toml
+├── CHANGELOG.md
+├── SECURITY.md
+├── LICENSE
+└── README.md
+```
+
+## Testing
+
+```bash
+# Run the full suite
+pytest -q
+
+# With coverage on the src package
+pytest -q --cov=src --cov-report=term-missing
+```
+
+The suite mocks heavy I/O (`librosa.load`, network calls, file system writes)
+so it runs in seconds and does not require real audio files or network
+access.
+
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+Commits use the [Conventional Commits](https://www.conventionalcommits.org/)
+prefixes (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `ci:`, `refactor:`).
+The `.github/workflows/version.yml` workflow inspects commits since the last
+tag and bumps the version in `pyproject.toml` accordingly:
+
+- `BREAKING CHANGE:` -> major
+- `feat:` -> minor
+- anything else -> patch
+
+A matching Git tag and GitHub Release are created automatically.
+
+See [CHANGELOG.md](CHANGELOG.md) for the human-readable history.
 
 ## License
 
-MIT
+Released under the [MIT License](LICENSE) (c) 2026 Jakub Syrek.
+
+## Contact
+
+- Author: **Jakub Syrek**
+- Email: `jakubvonsyrek@gmail.com`
+- Issues: <https://github.com/Jakub-Syrek/MusicStyleAnalysis__ML/issues>
+- Security: see [SECURITY.md](SECURITY.md)
