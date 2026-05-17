@@ -1,0 +1,160 @@
+name: Auto Version
+
+on:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: version-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    if: "!startsWith(github.event.head_commit.message, 'chore(release):')"
+    name: Bump version, tag and release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Configure git author
+        run: |
+          git config user.name "Jakub Syrek"
+          git config user.email "jakubvonsyrek@gmail.com"
+
+      - name: Determine next version
+        id: bump
+        shell: python
+        run: |
+          import os
+          import pathlib
+          import re
+          import subprocess
+
+          def run(cmd):
+              return subprocess.run(
+                  cmd,
+                  check=True,
+                  capture_output=True,
+                  text=True,
+              ).stdout.strip()
+
+          tags = run(["git", "tag", "--sort=-v:refname"]).splitlines()
+          last_tag = tags[0] if tags else ""
+          if last_tag:
+              commit_range = f"{last_tag}..HEAD"
+              print(f"Scanning commits in range: {commit_range}")
+          else:
+              commit_range = "HEAD"
+              print("No previous tag found; scanning full history.")
+
+          commits = run(["git", "log", "--pretty=%B", commit_range])
+          print("Commits considered:\n" + commits)
+
+          breaking = re.compile(r"(?m)^[a-zA-Z]+(\([^)]*\))?!:")
+          breaking_footer = re.compile(r"(?m)^BREAKING CHANGE:")
+          feat = re.compile(r"(?m)^feat(\([^)]*\))?:")
+
+          level = "patch"
+          if breaking_footer.search(commits) or breaking.search(commits):
+              level = "major"
+          elif feat.search(commits):
+              level = "minor"
+          print(f"Bump level: {level}")
+
+          pyproject = pathlib.Path("pyproject.toml").read_text(encoding="utf-8")
+          match = re.search(r'^version\s*=\s*"([^"]+)"', pyproject, re.MULTILINE)
+          if not match:
+              raise SystemExit("version field not found in pyproject.toml")
+          current = match.group(1)
+          print(f"Current version: {current}")
+
+          major, minor, patch = (int(p) for p in current.split("."))
+          if level == "major":
+              major, minor, patch = major + 1, 0, 0
+          elif level == "minor":
+              minor, patch = minor + 1, 0
+          else:
+              patch += 1
+          nxt = f"{major}.{minor}.{patch}"
+          print(f"Next version: {nxt}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"current={current}\n")
+              fh.write(f"next={nxt}\n")
+              fh.write(f"level={level}\n")
+
+      - name: Update version in sources
+        shell: python
+        run: |
+          import pathlib
+          import re
+
+          next_version = "${{ steps.bump.outputs.next }}"
+
+          pyproject = pathlib.Path("pyproject.toml")
+          text = pyproject.read_text(encoding="utf-8")
+          text = re.sub(
+              r'(^version\s*=\s*)"[^"]+"',
+              rf'\1"{next_version}"',
+              text,
+              count=1,
+              flags=re.MULTILINE,
+          )
+          pyproject.write_text(text, encoding="utf-8")
+          print(f"Updated pyproject.toml -> {next_version}")
+
+          for init in pathlib.Path("src").rglob("__init__.py"):
+              src = init.read_text(encoding="utf-8")
+              if "__version__" in src:
+                  new = re.sub(
+                      r'__version__\s*=\s*"[^"]+"',
+                      f'__version__ = "{next_version}"',
+                      src,
+                      count=1,
+                  )
+                  init.write_text(new, encoding="utf-8")
+                  print(f"Updated {init} -> {next_version}")
+
+      - name: Commit, tag and push
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          next="${{ steps.bump.outputs.next }}"
+          tag="v${next}"
+
+          if git diff --quiet; then
+            echo "No source changes to commit; skipping release."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git add pyproject.toml src
+          git commit -m "chore(release): ${tag}"
+          git tag -a "${tag}" -m "Release ${tag}"
+          git push origin "HEAD:${GITHUB_REF#refs/heads/}"
+          git push origin "${tag}"
+
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "skipped=false" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: steps.release.outputs.skipped != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release.outputs.tag }}
+          name: ${{ steps.release.outputs.tag }}
+          generate_release_notes: true
