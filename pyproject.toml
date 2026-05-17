@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "music-style-analysis-ml"
+version = "1.0.0"
+description = "Analyse musical style from audio and classify it into 45+ electronic genres with an adaptive Random Forest model."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Jakub Syrek", email = "jakubvonsyrek@gmail.com" }
+]
+keywords = [
+    "music",
+    "audio-analysis",
+    "genre-classification",
+    "machine-learning",
+    "librosa",
+    "scikit-learn",
+    "mir",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Analysis",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "librosa==0.10.0",
+    "music21==9.1.0",
+    "requests==2.33.1",
+    "urllib3==2.7.0",
+    "charset-normalizer==3.4.7",
+    "python-dotenv==1.0.0",
+    "numpy==1.24.3",
+    "scipy==1.11.2",
+    "soundfile>=0.12.1",
+    "scikit-learn>=1.3.0",
+    "joblib>=1.3.0",
+    "yt-dlp>=2024.1.0",
+    "static-ffmpeg>=2.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/Jakub-Syrek/MusicStyleAnalysis__ML"
+Repository = "https://github.com/Jakub-Syrek/MusicStyleAnalysis__ML"
+Issues = "https://github.com/Jakub-Syrek/MusicStyleAnalysis__ML/issues"
+Changelog = "https://github.com/Jakub-Syrek/MusicStyleAnalysis__ML/blob/master/CHANGELOG.md"
+
+[project.scripts]
+music-style-analysis = "src.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
